@@ -1,0 +1,52 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      [
+        'build',
+        '-f',
+        'payment-proxy/Dockerfile',
+        '-t',
+        '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_IMAGE}:$SHORT_SHA',
+        '.',
+      ]
+
+  - name: gcr.io/cloud-builders/docker
+    args:
+      [
+        'push',
+        '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_IMAGE}:$SHORT_SHA',
+      ]
+
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      [
+        'run',
+        'deploy',
+        '${_SERVICE}',
+        '--image',
+        '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_IMAGE}:$SHORT_SHA',
+        '--region',
+        '${_REGION}',
+        '--platform',
+        'managed',
+        '--allow-unauthenticated',
+        '--port',
+        '8080',
+        '--add-cloudsql-instances',
+        '${_CLOUDSQL_INSTANCE}',
+        '--set-env-vars',
+        'NODE_ENV=production,HOST=0.0.0.0,PORT=8080,VCARX_PAYMENT_PROVIDER=garanti_oos,GARANTI_MODE=PROD,GARANTI_API_VERSION=v0.01,GARANTI_SECURE3D_MODEL=3D_OOS_PAY,GARANTI_LANGUAGE=tr',
+        '--set-secrets',
+        'DATABASE_URL=DATABASE_URL:latest,VCARX_PAYMENT_PROXY_PUBLIC_BASE_URL=VCARX_PAYMENT_PROXY_PUBLIC_BASE_URL:latest,VCARX_PLATFORM_PAYMENT_CALLBACK_URL=VCARX_PLATFORM_PAYMENT_CALLBACK_URL:latest,VCARX_PAYMENT_CALLBACK_TOKEN=VCARX_PAYMENT_CALLBACK_TOKEN:latest,VCARX_PAYMENT_CALLBACK_SIGNATURE_SECRET=VCARX_PAYMENT_CALLBACK_SIGNATURE_SECRET:latest,GARANTI_MERCHANT_ID=GARANTI_MERCHANT_ID:latest,GARANTI_TERMINAL_ID=GARANTI_TERMINAL_ID:latest,GARANTI_TERMINAL_PROV_USER_ID=GARANTI_TERMINAL_PROV_USER_ID:latest,GARANTI_TERMINAL_USER_ID=GARANTI_TERMINAL_USER_ID:latest,GARANTI_PROVISION_PASSWORD=GARANTI_PROVISION_PASSWORD:latest,GARANTI_STORE_KEY=GARANTI_STORE_KEY:latest,GARANTI_GATE3DENGINE_URL=GARANTI_GATE3DENGINE_URL:latest,GARANTI_COMPANY_NAME=GARANTI_COMPANY_NAME:latest',
+      ]
+
+images:
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_IMAGE}:$SHORT_SHA'
+
+substitutions:
+  _SERVICE: carloi-payment-proxy
+  _REGION: europe-west1
+  _REPOSITORY: carloi
+  _IMAGE: payment-proxy
+  _CLOUDSQL_INSTANCE: PROJECT_ID:REGION:INSTANCE_NAME

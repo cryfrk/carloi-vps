@@ -1,0 +1,101 @@
+﻿<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Carloi Admin</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">CARLOI ADMIN</p>
+          <h1>Sigorta ve satış yönetimi</h1>
+          <p class="subtitle">İlan sohbetlerinden gelen ruhsat, teklif ve poliçe süreçlerini buradan yönetin.</p>
+        </div>
+        <div class="token-box">
+          <label for="adminToken">Admin token</label>
+          <input id="adminToken" type="password" placeholder="VCARX_ADMIN_TOKEN" />
+          <button id="saveToken">Bağlan</button>
+        </div>
+      </header>
+
+      <section class="status-row">
+        <div class="status-card">
+          <span>Durum</span>
+          <strong id="statusText">Bağlantı bekleniyor</strong>
+        </div>
+        <div class="status-card">
+          <span>Toplam kayıt</span>
+          <strong id="dealCount">0</strong>
+        </div>
+      </section>
+
+      <section class="system-panel">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">SİSTEM DURUMU</p>
+            <h2>Canlıya hazırlık kontrolü</h2>
+          </div>
+          <button id="refreshSystemStatus" type="button">Durumu yenile</button>
+        </div>
+        <div id="systemCards" class="system-cards"></div>
+        <div class="system-warnings">
+          <h3>Uyarılar</h3>
+          <div id="systemWarnings" class="detail-lines"></div>
+        </div>
+      </section>
+
+      <main id="dealList" class="deal-list"></main>
+    </div>
+
+    <template id="dealTemplate">
+      <article class="deal-card">
+        <div class="deal-header">
+          <div>
+            <h2 class="deal-title"></h2>
+            <p class="deal-meta"></p>
+          </div>
+          <span class="deal-status"></span>
+        </div>
+
+        <div class="deal-grid">
+          <section class="detail-box">
+            <h3>Alıcı</h3>
+            <div class="detail-lines buyer-lines"></div>
+          </section>
+          <section class="detail-box">
+            <h3>Satıcı</h3>
+            <div class="detail-lines seller-lines"></div>
+          </section>
+          <section class="detail-box">
+            <h3>Ruhsat</h3>
+            <div class="detail-lines registration-lines"></div>
+          </section>
+          <section class="detail-box">
+            <h3>Sigorta</h3>
+            <div class="detail-lines insurance-lines"></div>
+          </section>
+        </div>
+
+        <div class="action-grid">
+          <form class="action-form quote-form">
+            <label>Sigorta bedeli</label>
+            <input name="amount" placeholder="Örn. 18.500 TL" />
+            <button type="submit">Teklif kaydet</button>
+          </form>
+
+          <form class="action-form policy-form">
+            <label>Poliçe bağlantısı</label>
+            <input name="policyUrl" placeholder="https://..." />
+            <button type="submit">Poliçe maili gönder</button>
+          </form>
+        </div>
+      </article>
+    </template>
+
+    <script src="./panel.js"></script>
+  </body>
+</html>
+

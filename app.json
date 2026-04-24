@@ -1,0 +1,49 @@
+{
+  "expo": {
+    "name": "Carloi",
+    "slug": "carloi",
+    "scheme": "carloi",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./carloi.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./carloi.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.carloi.mobile"
+    },
+    "android": {
+      "package": "com.carloi.mobile",
+      "adaptiveIcon": {
+        "foregroundImage": "./carloi.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./carloi.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "98795877-8328-401a-a1a3-2cfb3619049d"
+      }
+    },
+    "owner": "newtv",
+    "plugins": [
+      "expo-font",
+      "expo-video",
+      "expo-audio",
+      "expo-apple-authentication",
+      "react-native-wifi-reborn",
+      "with-rn-bluetooth-classic",
+      "expo-iap",
+      "expo-web-browser"
+    ]
+  }
+}

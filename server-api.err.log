@@ -1,0 +1,9 @@
+Security warning: VCARX_SESSION_SECRET varsayılan değerde. Production için güçlü bir secret kullanın.
+(node:37432) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+VCARX readiness warning: Security secretleri veya admin token production seviyesinde tamamlanmamış.
+VCARX readiness warning: Sigorta/araç ödeme hattı için payment proxy URL tanımlı değil.
+VCARX readiness warning: Google Play premium doğrulaması için ürün SKU veya servis hesabı eksik.
+VCARX readiness warning: App Store premium doğrulaması için issuer/key/private key veya bundle ID eksik.
+VCARX readiness warning: Doğrulama kodu gönderimi için ne SMTP ne de Twilio aktif görünüyor.
+VCARX readiness warning: Production için VCARX_REQUIRE_HTTPS=true önerilir.

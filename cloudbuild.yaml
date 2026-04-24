@@ -1,0 +1,46 @@
+substitutions:
+  _SERVICE: carloi-api
+  _REGION: europe-west1
+  _REPOSITORY: carloi
+  _IMAGE: backend
+  _CLOUDSQL_INSTANCE: ''
+  _GCS_BUCKET: ''
+  _PUBLIC_BASE_URL: ''
+
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -t
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_IMAGE}:$COMMIT_SHA
+      - .
+
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_IMAGE}:$COMMIT_SHA
+
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - ${_SERVICE}
+      - --image
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_IMAGE}:$COMMIT_SHA
+      - --region
+      - ${_REGION}
+      - --platform
+      - managed
+      - --allow-unauthenticated
+      - --port
+      - '8080'
+      - --set-env-vars
+      - NODE_ENV=production,HOST=0.0.0.0,PORT=8080,STORAGE_DRIVER=gcs,GCP_PROJECT_ID=$PROJECT_ID,GCS_BUCKET_NAME=${_GCS_BUCKET},VCARX_PUBLIC_BASE_URL=${_PUBLIC_BASE_URL}
+      - --set-secrets
+      - DATABASE_URL=DATABASE_URL:latest,SMTP_HOST=SMTP_HOST:latest,SMTP_PORT=SMTP_PORT:latest,SMTP_SECURE=SMTP_SECURE:latest,SMTP_USER=SMTP_USER:latest,SMTP_PASS=SMTP_PASS:latest,MAIL_FROM=MAIL_FROM:latest,OPENAI_API_KEY=OPENAI_API_KEY:latest,DEEPSEEK_API_KEY=DEEPSEEK_API_KEY:latest,VCARX_SESSION_SECRET=VCARX_SESSION_SECRET:latest,VCARX_DATA_ENCRYPTION_SECRET=VCARX_DATA_ENCRYPTION_SECRET:latest,VCARX_LOOKUP_SECRET=VCARX_LOOKUP_SECRET:latest,VCARX_ADMIN_TOKEN=VCARX_ADMIN_TOKEN:latest
+      - --add-cloudsql-instances
+      - ${_CLOUDSQL_INSTANCE}
+
+images:
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_IMAGE}:$COMMIT_SHA
