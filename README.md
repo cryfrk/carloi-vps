@@ -57,10 +57,12 @@ VCARX_TRUST_PROXY=true
 ```bash
 git clone <repo-url> carloi
 cd carloi
-cp .env.example .env.vps
+cp .env.vps.example .env.vps
 ```
 
-`.env.vps` icinde en az su alanlari doldurun:
+Ilk smoke test icin `.env.vps.example` dosyasi bilerek `development + VCARX_SKIP_VALIDATION=true + http://localhost` ile gelir.
+
+Gercek production domain/TLS hazir oldugunda `.env.vps` icinde en az su alanlari guncelleyin:
 
 - `VCARX_PUBLIC_BASE_URL`
 - `APP_BASE_URL`
@@ -71,7 +73,16 @@ cp .env.example .env.vps
 - `VCARX_DATA_ENCRYPTION_SECRET`
 - `VCARX_LOOKUP_SECRET`
 - `VCARX_ADMIN_TOKEN`
-- `POSTGRES_PASSWORD` degil, bunun yerine compose env substitution icin shell env veya `.env` icinde guclu parola
+- `POSTGRES_PASSWORD`
+
+Not:
+
+- `VCARX_REQUIRE_HTTPS=false` ve `VCARX_SKIP_VALIDATION=true` sadece ilk VPS smoke test icindir.
+- Canli domain ve TLS hazir olduktan sonra:
+  - `NODE_ENV=production`
+  - `VCARX_SKIP_VALIDATION=false`
+  - `VCARX_REQUIRE_HTTPS=true`
+  - `VCARX_TRUST_PROXY=true`
 
 ### 3. Docker Compose ile kaldir
 
@@ -90,18 +101,20 @@ Kalici volume'ler:
 - `postgres_data`
 - `uploads_data`
 
-### 4. Migration calistir
+API container startup sirasinda PostgreSQL migration artik otomatik calisir. Bu sayede sifir VPS'te tek komutla ayaga kalkabilir.
 
-API container ayaga kalktikten sonra:
+### 4. Migration'i manuel tekrar calistir (opsiyonel)
+
+Gerektiginde migration'i tekrar elle idempotent sekilde calistirabilirsiniz:
 
 ```bash
-docker compose --env-file .env.vps -f docker-compose.production.yml exec api npm run db:migrate:postgres
+docker compose --env-file .env.vps -f docker-compose.production.yml run --rm api node scripts/migrate-postgres.js
 ```
 
 ### 5. Health kontrolu
 
 ```bash
-curl http://127.0.0.1/health
+curl http://localhost:8080/health
 ```
 
 Beklenen cevap:

@@ -1,4 +1,4 @@
-const { db, toDbBoolean } = require('../../database');
+const { db, isPostgresMode, toDbBoolean } = require('../../database');
 const { decryptJson, decryptText } = require('../../security');
 const { canViewMessageContent } = require('./access.service');
 const { getFeatureFlagSnapshot, isFeatureEnabled } = require('../feature-flags/config');
@@ -29,6 +29,8 @@ function summarizeListingJson(value) {
   };
 }
 
+const userAdminRolesTimestampColumn = isPostgresMode() ? 'granted_at' : 'created_at';
+
 async function listAdminRoleKeysForUser(userId) {
   if (!userId) {
     return [];
@@ -39,7 +41,7 @@ async function listAdminRoleKeysForUser(userId) {
       `SELECT role_key
        FROM user_admin_roles
        WHERE user_id = ?
-       ORDER BY created_at ASC`,
+       ORDER BY ${userAdminRolesTimestampColumn} ASC`,
     )
     .all(userId);
 
@@ -257,10 +259,10 @@ async function getAdminUserDetail(userId, { includePaymentInternals = false } = 
         .get(userId),
       db
         .prepare(
-          `SELECT role_key, created_at
+          `SELECT role_key, ${userAdminRolesTimestampColumn} AS created_at
            FROM user_admin_roles
            WHERE user_id = ?
-           ORDER BY created_at DESC`,
+           ORDER BY ${userAdminRolesTimestampColumn} DESC`,
         )
         .all(userId),
     ]);

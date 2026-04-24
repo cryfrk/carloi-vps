@@ -33,7 +33,9 @@ yarn-error.*
 # local env files
 .env
 .env*.local
+.env.vps
 server/data/
+payment-proxy/data/
 
 # typescript
 *.tsbuildinfo
@@ -41,3 +43,16 @@ server/data/
 # generated native folders
 /ios
 /android
+
+# release artifacts / local debug output
+release/
+tmp_gvp/
+GVP.zip
+*.apk
+*.aab
+*.zip
+*.log
+*.err.log
+*.sqlite
+*.sqlite3
+*.db

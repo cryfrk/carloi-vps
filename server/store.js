@@ -1,7 +1,7 @@
 ﻿const { randomBytes, randomUUID, scryptSync, timingSafeEqual } = require('node:crypto');
 const { createHash } = require('node:crypto');
 const { config } = require('./config');
-const { db, initializeDatabase, toDbBoolean } = require('./database');
+const { db, initializeDatabase, isPostgresMode, toDbBoolean } = require('./database');
 const { verifyAppStoreSubscriptionPurchase } = require('./appleStore');
 const { defaultAiMessages, defaultProfileSegment, defaultSettings } = require('./defaults');
 const { verifyGooglePlaySubscriptionPurchase } = require('./googlePlay');
@@ -868,6 +868,10 @@ async function ensureColumn(table, column, definition) {
 }
 
 async function migrateLegacyData() {
+  const booleanColumnDefaultFalse = isPostgresMode()
+    ? 'BOOLEAN NOT NULL DEFAULT FALSE'
+    : 'INTEGER NOT NULL DEFAULT 0';
+
   await ensureColumn('users', 'email_lookup', 'TEXT');
   await ensureColumn('users', 'phone_lookup', 'TEXT');
   await ensureColumn('users', 'google_sub', 'TEXT');
@@ -879,10 +883,10 @@ async function migrateLegacyData() {
   await ensureColumn('users', 'commercial_reviewed_by_admin_id', 'TEXT');
   await ensureColumn('users', 'yearly_vehicle_sale_count', 'INTEGER NOT NULL DEFAULT 0');
   await ensureColumn('users', 'yearly_vehicle_listing_count', 'INTEGER NOT NULL DEFAULT 0');
-  await ensureColumn('users', 'commercial_behavior_flag', 'INTEGER NOT NULL DEFAULT 0');
+  await ensureColumn('users', 'commercial_behavior_flag', booleanColumnDefaultFalse);
   await ensureColumn('users', 'risk_score', 'INTEGER NOT NULL DEFAULT 0');
   await ensureColumn('users', 'risk_level', "TEXT NOT NULL DEFAULT 'low'");
-  await ensureColumn('users', 'can_create_paid_listings', 'INTEGER NOT NULL DEFAULT 0');
+  await ensureColumn('users', 'can_create_paid_listings', booleanColumnDefaultFalse);
   await ensureColumn('users', 'subscription_status', "TEXT NOT NULL DEFAULT 'inactive'");
   await ensureColumn('users', 'subscription_plan_id', 'TEXT');
   await ensureColumn('users', 'forgot_password_required_reset_at', 'TEXT');
@@ -905,25 +909,26 @@ async function migrateLegacyData() {
   await ensureColumn(
     'listing_compliance',
     'authorization_declaration_accepted',
-    'INTEGER NOT NULL DEFAULT 0',
+    booleanColumnDefaultFalse,
   );
   await ensureColumn('listing_compliance', 'risk_score', 'INTEGER NOT NULL DEFAULT 0');
   await ensureColumn('listing_compliance', 'risk_level', "TEXT NOT NULL DEFAULT 'low'");
-  await ensureColumn('listing_compliance', 'billing_required', 'INTEGER NOT NULL DEFAULT 0');
+  await ensureColumn('listing_compliance', 'billing_required', booleanColumnDefaultFalse);
   await ensureColumn(
     'listing_compliance',
     'billing_status',
     "TEXT NOT NULL DEFAULT 'not_required'",
   );
   await ensureColumn('listing_compliance', 'payment_record_id', 'TEXT');
-  await ensureColumn('listing_compliance', 'duplicate_plate_flag', 'INTEGER NOT NULL DEFAULT 0');
-  await ensureColumn('listing_compliance', 'abnormal_price_flag', 'INTEGER NOT NULL DEFAULT 0');
-  await ensureColumn('listing_compliance', 'spam_content_flag', 'INTEGER NOT NULL DEFAULT 0');
+  await ensureColumn('listing_compliance', 'duplicate_plate_flag', booleanColumnDefaultFalse);
+  await ensureColumn('listing_compliance', 'abnormal_price_flag', booleanColumnDefaultFalse);
+  await ensureColumn('listing_compliance', 'spam_content_flag', booleanColumnDefaultFalse);
   await ensureColumn('commercial_profiles', 'submitted_at', 'TEXT');
   await ensureColumn('commercial_profiles', 'document_truthfulness_accepted_at', 'TEXT');
   await ensureColumn('commercial_profiles', 'additional_verification_acknowledged_at', 'TEXT');
 
-  await db.exec(`
+  if (!isPostgresMode()) {
+    await db.exec(`
     CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_lookup ON users(email_lookup);
     CREATE UNIQUE INDEX IF NOT EXISTS idx_users_phone_lookup ON users(phone_lookup);
     CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_sub ON users(google_sub);
@@ -1062,6 +1067,7 @@ async function migrateLegacyData() {
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
   `);
+  }
 
   await ensureColumn(
     'billing_settings',
