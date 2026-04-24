@@ -211,11 +211,46 @@ function buildSmtpLogContext(extra = {}, error) {
   };
 }
 
+function getMailServiceState() {
+  const configured = Boolean(transporter && config.smtpFrom);
+
+  if (config.disableEmail) {
+    return {
+      disabled: true,
+      configured,
+      available: false,
+      reason: 'disabled',
+    };
+  }
+
+  if (!configured) {
+    return {
+      disabled: false,
+      configured: false,
+      available: false,
+      reason: 'not_configured',
+    };
+  }
+
+  return {
+    disabled: false,
+    configured: true,
+    available: true,
+    reason: 'ready',
+  };
+}
+
 function ensureMailerReady() {
-  if (!transporter || !config.smtpFrom) {
-    throw createMailerError(
-      'SMTP mail servisi yapilandirilmadi. SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS ve MAIL_FROM degerlerini kontrol edin.',
+  const state = getMailServiceState();
+  if (!state.available) {
+    const error = createMailerError(
+      state.reason === 'disabled'
+        ? 'E-posta servisi su anda devre disi.'
+        : 'SMTP mail servisi yapilandirilmadi. SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS ve SMTP_FROM/MAIL_FROM degerlerini kontrol edin.',
     );
+    error.emailDisabled = state.reason === 'disabled';
+    error.emailNotConfigured = state.reason === 'not_configured';
+    throw error;
   }
 }
 
@@ -266,14 +301,16 @@ function shouldRetryMailSend(error) {
 }
 
 async function verifyMailerConnection() {
-  if (config.disableEmail) {
+  const state = getMailServiceState();
+
+  if (state.reason === 'disabled') {
     logWarn('mail.smtp.disabled', {
       reason: 'VCARX_DISABLE_EMAIL_or_SMTP_DISABLED',
     });
     return false;
   }
 
-  if (!transporter || !config.smtpFrom) {
+  if (state.reason === 'not_configured') {
     logWarn('mail.smtp.not_configured', buildSmtpLogContext());
     return false;
   }
@@ -294,7 +331,8 @@ async function verifyMailerConnection() {
 async function sendEmail(to, subject, html, text, options = {}) {
   const attachments = normalizeAttachments(options.attachments);
 
-  if (config.disableEmail) {
+  const state = getMailServiceState();
+  if (state.reason === 'disabled') {
     logWarn('mail.send.skipped_disabled', {
       to,
       subject,
@@ -302,6 +340,8 @@ async function sendEmail(to, subject, html, text, options = {}) {
     });
     return {
       skipped: true,
+      emailDisabled: true,
+      emailNotConfigured: false,
       accepted: [],
       rejected: [],
     };
@@ -411,6 +451,7 @@ async function sendResetPasswordEmail(email, codeOrLink, options = {}) {
 }
 
 module.exports = {
+  getMailServiceState,
   sendEmail,
   sendResetPasswordEmail,
   sendVerificationEmail,

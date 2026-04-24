@@ -715,6 +715,8 @@ export interface AuthActionResult {
   expiresAt?: string;
   maskedDestination?: string;
   deliveryFailed?: boolean;
+  emailDisabled?: boolean;
+  emailNotConfigured?: boolean;
   requiresVerification?: boolean;
 }
 

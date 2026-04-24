@@ -711,20 +711,24 @@ app.post('/api/auth/register', authLimiter, async (request, response, next) => {
       ipAddress: request.ip,
       userAgent: request.get('user-agent'),
     });
-    logInfo('auth.register.http_succeeded', {
-      accountType: request.body?.accountType || 'individual',
-      email: result.email || '',
-      deliveryFailed: Boolean(result.deliveryFailed),
-      ipAddress: request.ip,
-    });
-    response.status(201).json({
-      success: true,
-      message: result.message,
-      email: result.email,
-      expiresAt: result.expiresAt,
-      maskedDestination: result.maskedDestination,
-      deliveryFailed: result.deliveryFailed,
-    });
+      logInfo('auth.register.http_succeeded', {
+        accountType: request.body?.accountType || 'individual',
+        email: result.email || '',
+        deliveryFailed: Boolean(result.deliveryFailed),
+        emailDisabled: Boolean(result.emailDisabled),
+        emailNotConfigured: Boolean(result.emailNotConfigured),
+        ipAddress: request.ip,
+      });
+      response.status(201).json({
+        success: true,
+        message: result.message,
+        email: result.email,
+        expiresAt: result.expiresAt,
+        maskedDestination: result.maskedDestination,
+        deliveryFailed: result.deliveryFailed,
+        emailDisabled: result.emailDisabled,
+        emailNotConfigured: result.emailNotConfigured,
+      });
   } catch (error) {
     logError('auth.register.http_failed', {
       accountType: request.body?.accountType || 'individual',
@@ -773,12 +777,18 @@ async function handleResendCode(request, response, next) {
     const result = await resendEmailVerificationCode(request.body?.email);
     response.status(201).json({
       success: true,
-      message: result.skipped
-        ? 'Hesap uygun durumdaysa doğrulama e-postası yeniden gönderildi.'
-        : 'Doğrulama e-postası yeniden gönderildi.',
+      message:
+        result.emailDisabled || result.emailNotConfigured
+          ? 'E-posta servisi henüz aktif değil. Lütfen daha sonra tekrar deneyin.'
+          : result.skipped
+            ? 'Hesap uygun durumdaysa doğrulama e-postası yeniden gönderildi.'
+            : 'Doğrulama e-postası yeniden gönderildi.',
       email: result.email,
       expiresAt: result.expiresAt,
       maskedDestination: result.maskedDestination,
+      deliveryFailed: result.deliveryFailed,
+      emailDisabled: result.emailDisabled,
+      emailNotConfigured: result.emailNotConfigured,
     });
   } catch (error) {
     if (isVerificationMailDeliveryError(error)) {
@@ -800,10 +810,16 @@ app.post('/api/auth/resend-verification-code', resendCodeLimiter, handleResendCo
 
 async function handleForgotPassword(request, response, next) {
   try {
-    await requestPasswordReset(request.body?.email);
+    const result = await requestPasswordReset(request.body?.email);
     response.status(201).json({
       success: true,
-      message: 'Hesap uygunsa şifre sıfırlama bağlantısı e-posta adresine gönderildi.',
+      message:
+        result.emailDisabled || result.emailNotConfigured
+          ? 'E-posta servisi henüz aktif değil. Lütfen daha sonra tekrar deneyin.'
+          : 'Hesap uygunsa şifre sıfırlama bağlantısı e-posta adresine gönderildi.',
+      deliveryFailed: result.deliveryFailed,
+      emailDisabled: result.emailDisabled,
+      emailNotConfigured: result.emailNotConfigured,
     });
   } catch (error) {
     next(error);

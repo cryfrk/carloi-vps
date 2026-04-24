@@ -227,7 +227,11 @@ const config = {
       .trim()
       .toLowerCase() === 'true',
   smtpFrom: normalizeMailFrom(
-    process.env.MAIL_FROM || process.env.VCARX_SMTP_FROM || process.env.VCAR_SMTP_FROM || '',
+    process.env.SMTP_FROM ||
+      process.env.MAIL_FROM ||
+      process.env.VCARX_SMTP_FROM ||
+      process.env.VCAR_SMTP_FROM ||
+      '',
     process.env.SMTP_USER || process.env.VCARX_SMTP_USER || process.env.VCAR_SMTP_USER || '',
   ),
   smtpConnectionTimeoutMs: Number(process.env.SMTP_CONNECTION_TIMEOUT_MS || 5000),

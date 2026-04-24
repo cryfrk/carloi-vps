@@ -2,6 +2,7 @@
 const { createHash } = require('node:crypto');
 const { config } = require('./config');
 const { db, initializeDatabase, isPostgresMode, toDbBoolean } = require('./database');
+const { getMailServiceState } = require('./mailer');
 const { verifyAppStoreSubscriptionPurchase } = require('./appleStore');
 const { defaultAiMessages, defaultProfileSegment, defaultSettings } = require('./defaults');
 const { verifyGooglePlaySubscriptionPurchase } = require('./googlePlay');
@@ -818,6 +819,8 @@ function createVerificationMailDeliveryError(cause) {
   error.expose = true;
   if (cause) {
     error.cause = cause;
+    error.emailDisabled = Boolean(cause.emailDisabled);
+    error.emailNotConfigured = Boolean(cause.emailNotConfigured);
   }
   return error;
 }
@@ -834,6 +837,15 @@ function runDetachedTask(taskName, task) {
         });
       });
   });
+}
+
+function getMailAvailabilityFlags() {
+  const state = getMailServiceState();
+  return {
+    emailDisabled: state.reason === 'disabled',
+    emailNotConfigured: state.reason === 'not_configured',
+    emailAvailable: state.available,
+  };
 }
 
 function hashPassword(password) {
@@ -2538,6 +2550,8 @@ async function deliverEmailVerificationToken({
     return {
       maskedDestination: delivery.maskedDestination || maskVerificationDestination('email', normalizedEmail),
       skipped: Boolean(delivery?.skipped),
+      emailDisabled: Boolean(delivery?.emailDisabled),
+      emailNotConfigured: Boolean(delivery?.emailNotConfigured),
     };
   } catch (cause) {
     if (invalidateOnFailure) {
@@ -2564,23 +2578,29 @@ async function issueEmailVerificationToken(email, userId, options = {}) {
     ttlMs: EMAIL_VERIFICATION_TOKEN_TTL_MS,
   });
   const maskedDestination = maskVerificationDestination('email', normalizedEmail);
+  const mailState = getMailAvailabilityFlags();
+
+  if (!mailState.emailAvailable) {
+    logWarn('auth.verification_mail.unavailable', {
+      userIdSuffix: String(userId || '').slice(-6),
+      destination: maskedDestination,
+      emailDisabled: mailState.emailDisabled,
+      emailNotConfigured: mailState.emailNotConfigured,
+      deferDelivery: Boolean(options.deferDelivery),
+    });
+
+    return {
+      expiresAt: authToken.expiresAt,
+      maskedDestination,
+      deliveryFailed: true,
+      deliveryDeferred: false,
+      skipped: true,
+      emailDisabled: mailState.emailDisabled,
+      emailNotConfigured: mailState.emailNotConfigured,
+    };
+  }
 
   if (options.deferDelivery) {
-    if (config.disableEmail) {
-      logWarn('auth.verification_mail.skipped', {
-        userIdSuffix: String(userId || '').slice(-6),
-        destination: maskedDestination,
-        reason: 'email_disabled',
-      });
-
-      return {
-        expiresAt: authToken.expiresAt,
-        maskedDestination,
-        deliveryFailed: true,
-        deliveryDeferred: false,
-      };
-    }
-
     runDetachedTask('auth.verification_mail.background_failed', async () => {
       await deliverEmailVerificationToken({
         email: normalizedEmail,
@@ -2594,14 +2614,18 @@ async function issueEmailVerificationToken(email, userId, options = {}) {
     logInfo('auth.verification_mail.queued', {
       userIdSuffix: String(userId || '').slice(-6),
       destination: maskedDestination,
-      emailDisabled: config.disableEmail,
+      emailDisabled: false,
+      emailNotConfigured: false,
     });
 
     return {
       expiresAt: authToken.expiresAt,
       maskedDestination,
-      deliveryFailed: Boolean(config.disableEmail),
+      deliveryFailed: false,
       deliveryDeferred: true,
+      skipped: false,
+      emailDisabled: false,
+      emailNotConfigured: false,
     };
   }
 
@@ -2617,6 +2641,9 @@ async function issueEmailVerificationToken(email, userId, options = {}) {
     expiresAt: authToken.expiresAt,
     maskedDestination: delivery.maskedDestination || maskedDestination,
     deliveryFailed: Boolean(delivery.skipped),
+    skipped: Boolean(delivery.skipped),
+    emailDisabled: Boolean(delivery.emailDisabled),
+    emailNotConfigured: Boolean(delivery.emailNotConfigured),
   };
 }
 
@@ -2973,6 +3000,8 @@ async function registerAccount(payload, requestMeta) {
     emailMasked: maskVerificationDestination('email', email),
     deliveryDeferred: Boolean(verification.deliveryDeferred),
     deliveryFailed: Boolean(verification.deliveryFailed),
+    emailDisabled: Boolean(verification.emailDisabled),
+    emailNotConfigured: Boolean(verification.emailNotConfigured),
   });
 
   return {
@@ -2988,6 +3017,8 @@ async function registerAccount(payload, requestMeta) {
             ? 'Hesap olusturuldu. E-posta dogrulamasindan sonra ticari belge yukleme ve platform inceleme adimina gecebilirsiniz.'
             : 'Hesap olusturuldu. Dogrulama baglantisi e-posta adresinize gonderiliyor.',
     deliveryFailed: Boolean(verification.deliveryFailed),
+    emailDisabled: Boolean(verification.emailDisabled),
+    emailNotConfigured: Boolean(verification.emailNotConfigured),
   };
 }
 
@@ -3166,6 +3197,10 @@ async function resendEmailVerificationCode(email) {
     email: normalizedEmail,
     expiresAt: verification.expiresAt,
     maskedDestination: verification.maskedDestination,
+    deliveryFailed: Boolean(verification.deliveryFailed),
+    skipped: Boolean(verification.skipped),
+    emailDisabled: Boolean(verification.emailDisabled),
+    emailNotConfigured: Boolean(verification.emailNotConfigured),
   };
 }
 
@@ -3178,10 +3213,20 @@ async function issuePasswordResetToken(email, userId) {
   });
 
   try {
-    await sendPasswordResetTokenMail({
+    const delivery = await sendPasswordResetTokenMail({
       destination: normalizedEmail,
       token: authToken.token,
     });
+
+    if (delivery?.skipped) {
+      await invalidateAuthTokens({ userId, type: 'password_reset' });
+      return {
+        expiresAt: authToken.expiresAt,
+        deliveryFailed: true,
+        emailDisabled: Boolean(delivery.emailDisabled),
+        emailNotConfigured: Boolean(delivery.emailNotConfigured),
+      };
+    }
   } catch (cause) {
     await invalidateAuthTokens({ userId, type: 'password_reset' });
     console.error(`${AUTH_TOKEN_LOG_PREFIX} delivery-failed`, {
@@ -3201,6 +3246,15 @@ async function issuePasswordResetToken(email, userId) {
 
 async function requestPasswordReset(email) {
   const normalizedEmail = normalizeEmail(email);
+  const mailState = getMailAvailabilityFlags();
+  if (!mailState.emailAvailable) {
+    return {
+      accepted: true,
+      emailDisabled: mailState.emailDisabled,
+      emailNotConfigured: mailState.emailNotConfigured,
+    };
+  }
+
   if (!normalizedEmail) {
     return { accepted: true };
   }
@@ -3223,12 +3277,20 @@ async function requestPasswordReset(email) {
   }
 
   try {
-    await issuePasswordResetToken(normalizedEmail, user.id);
-  } catch {
-    return { accepted: true };
+    const delivery = await issuePasswordResetToken(normalizedEmail, user.id);
+    return {
+      accepted: true,
+      deliveryFailed: Boolean(delivery?.deliveryFailed),
+      emailDisabled: Boolean(delivery?.emailDisabled),
+      emailNotConfigured: Boolean(delivery?.emailNotConfigured),
+    };
+  } catch (cause) {
+    return {
+      accepted: true,
+      emailDisabled: Boolean(cause?.emailDisabled),
+      emailNotConfigured: Boolean(cause?.emailNotConfigured),
+    };
   }
-
-  return { accepted: true };
 }
 
 async function resetPasswordWithCode(email, code, password) {

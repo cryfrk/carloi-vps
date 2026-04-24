@@ -8,7 +8,7 @@ Bu repo artik varsayilan production akisinda klasik VPS hedefler:
 - Veritabani: PostgreSQL
 - Reverse proxy: Nginx
 - Dosya yukleme: local volume (`/app/uploads`)
-- E-posta: istege bagli, varsayilan olarak kapali
+- E-posta: production'da SMTP ile aktif olmali
 
 Not:
 
@@ -37,8 +37,8 @@ PORT=8080
 DATABASE_URL=postgresql://carloi_user:strong_password@postgres:5432/carloi
 STORAGE_DRIVER=local
 UPLOAD_DIR=/app/uploads
-VCARX_DISABLE_EMAIL=true
-SMTP_DISABLED=true
+VCARX_DISABLE_EMAIL=false
+SMTP_DISABLED=false
 VCARX_REQUIRE_HTTPS=true
 VCARX_TRUST_PROXY=true
 ```
@@ -150,21 +150,34 @@ Nginx:
 
 ## Mail Ayarlari
 
-Varsayilan production path'te e-posta kapali gelebilir:
+Production'da kayit, dogrulama, sifre sifirlama ve sigorta mailleri icin SMTP aktif olmalidir:
+
+```env
+VCARX_DISABLE_EMAIL=false
+SMTP_DISABLED=false
+SMTP_HOST=smtp.ornek.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=info@carloi.com
+SMTP_PASS=uygulama-sifresi
+SMTP_FROM="Carloi <info@carloi.com>"
+```
+
+Gecici smoke test icin e-postayi bilincli olarak kapatmak isterseniz:
 
 ```env
 VCARX_DISABLE_EMAIL=true
 SMTP_DISABLED=true
 ```
 
-SMTP acmak isterseniz:
+SMTP icin zorunlu alanlar:
 
 - `SMTP_HOST`
 - `SMTP_PORT`
 - `SMTP_SECURE`
 - `SMTP_USER`
 - `SMTP_PASS`
-- `MAIL_FROM`
+- `SMTP_FROM` veya `MAIL_FROM`
 
 Register akisi mail timeout'u yuzunden bloke olmaz.
 

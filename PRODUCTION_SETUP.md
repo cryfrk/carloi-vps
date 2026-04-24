@@ -34,7 +34,7 @@ cp .env.vps.example .env.vps
 - `VCARX_SKIP_VALIDATION=true`
 - `VCARX_REQUIRE_HTTPS=false`
 - `VCARX_TRUST_PROXY=false`
-- `VCARX_DISABLE_EMAIL=true`
+- `VCARX_DISABLE_EMAIL=false`
 - `STORAGE_DRIVER=local`
 
 Gercek production domain/TLS hazir oldugunda `.env.vps` icinde sunlari guncelleyin:
@@ -53,6 +53,13 @@ Gercek production domain/TLS hazir oldugunda `.env.vps` icinde sunlari guncelley
 - `VCARX_LOOKUP_SECRET`
 - `POSTGRES_PASSWORD`
 - `VCARX_ADMIN_TOKEN`
+- `SMTP_HOST`
+- `SMTP_PORT`
+- `SMTP_USER`
+- `SMTP_PASS`
+- `SMTP_FROM`
+- `VCARX_DISABLE_EMAIL=false`
+- `SMTP_DISABLED=false`
 
 ## 3. Tek komutla VPS startup
 
@@ -100,13 +107,39 @@ Beklenen sonuc:
 }
 ```
 
-## 6. Opsiyonel servisler
+## 6. SMTP / dogrulama maili
+
+Production VPS'te kullanici kaydi, dogrulama linki, sifre sifirlama ve sigorta belgeleri icin SMTP aktif olmali:
+
+```env
+VCARX_DISABLE_EMAIL=false
+SMTP_DISABLED=false
+SMTP_HOST=smtp.ornek.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=info@carloi.com
+SMTP_PASS=uygulama-sifresi
+SMTP_FROM="Carloi <info@carloi.com>"
+```
+
+Notlar:
+
+- `SMTP_FROM` tercih edilen yeni anahtardir; `MAIL_FROM` geriye donuk olarak halen kabul edilir.
+- SMTP alanlari eksikse ve `VCARX_DISABLE_EMAIL=false` ise production startup validation artik hata verir.
+- Gecici smoke test icin e-postayi kapatmak isterseniz:
+
+```env
+VCARX_DISABLE_EMAIL=true
+SMTP_DISABLED=true
+```
+
+## 7. Opsiyonel servisler
 
 - SMTP acmak icin `SMTP_*` alanlarini doldurun.
 - Payment proxy/Garanti servisini ayri container veya ayri host uzerinde yayinlayin.
 - GCS kullanmak isterseniz `STORAGE_DRIVER=gcs` ile legacy yol halen desteklenir; ancak varsayilan production path degildir.
 
-## 7. Legacy Google Cloud referansi
+## 8. Legacy Google Cloud referansi
 
 Cloud Run / Cloud SQL / GCS referans dosyalari repoda bilgi amacli tutulur:
 

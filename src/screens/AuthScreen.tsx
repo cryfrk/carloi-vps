@@ -170,7 +170,9 @@ export function AuthScreen({
       }
 
       const nextFeedback =
-        result.maskedDestination && result.success
+        result.emailDisabled || result.emailNotConfigured
+          ? result.message ?? 'E-posta servisi henüz aktif değil. Lütfen daha sonra tekrar deneyin.'
+          : result.maskedDestination && result.success
           ? `${result.message ?? locale.auth.verificationSent} ${result.maskedDestination}`
           : result.message ?? '';
       setFeedback(repairTurkishText(nextFeedback));
@@ -212,7 +214,9 @@ export function AuthScreen({
         email: verificationEmail.trim(),
       });
       const nextFeedback =
-        result.maskedDestination && result.success
+        result.emailDisabled || result.emailNotConfigured
+          ? result.message ?? 'E-posta servisi henüz aktif değil. Lütfen daha sonra tekrar deneyin.'
+          : result.maskedDestination && result.success
           ? `${result.message ?? locale.auth.resendCode} ${result.maskedDestination}`
           : result.message ?? '';
       setFeedback(repairTurkishText(nextFeedback));

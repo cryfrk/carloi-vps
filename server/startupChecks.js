@@ -128,7 +128,9 @@ function validateStartupConfig(config) {
   if (config.disableEmail) {
     warnings.push('E-posta gonderimi devre disi. Dogrulama ve reset mailleri production ortaminda gonderilmeyecek.');
   } else if (!smtpConfigured) {
-    warnings.push('SMTP ayarlari tam degil. Reset, verify ve sigorta mailleri production oncesi dogrulanmali.');
+    errors.push(
+      'SMTP ayarlari eksik. Production ortaminda e-posta aciksa SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS ve SMTP_FROM/MAIL_FROM zorunludur.',
+    );
   }
 
   if (isProduction && config.smtpTlsRejectUnauthorized === false && !config.smtpEnableLegacyTlsInProduction) {

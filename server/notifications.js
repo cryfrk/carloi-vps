@@ -92,19 +92,23 @@ async function sendPasswordResetMail({ destination, code }, options = {}) {
       email: destination,
       code,
     });
-    await sendResetPasswordEmail(destination, resetUrl, options);
+    const delivery = await sendResetPasswordEmail(destination, resetUrl, options);
+    return {
+      maskedDestination: maskDestination('email', destination),
+      skipped: Boolean(delivery?.skipped),
+      emailDisabled: Boolean(delivery?.emailDisabled),
+      emailNotConfigured: Boolean(delivery?.emailNotConfigured),
+    };
   } catch (cause) {
     const error = new Error(
       'Sifre sifirlama maili gonderilemedi. SMTP kullanici adi, sifre, port ve gonderen adresini kontrol edin.',
     );
     error.statusCode = 502;
     error.cause = cause;
+    error.emailDisabled = Boolean(cause?.emailDisabled);
+    error.emailNotConfigured = Boolean(cause?.emailNotConfigured);
     throw error;
   }
-
-  return {
-    maskedDestination: maskDestination('email', destination),
-  };
 }
 
 async function sendVerificationTokenMail({ destination, token }, options = {}) {
@@ -112,19 +116,23 @@ async function sendVerificationTokenMail({ destination, token }, options = {}) {
     const verificationUrl = buildAuthLink('/verify-email', {
       token,
     });
-    await sendVerificationEmail(destination, verificationUrl, options);
+    const delivery = await sendVerificationEmail(destination, verificationUrl, options);
+    return {
+      maskedDestination: maskDestination('email', destination),
+      skipped: Boolean(delivery?.skipped),
+      emailDisabled: Boolean(delivery?.emailDisabled),
+      emailNotConfigured: Boolean(delivery?.emailNotConfigured),
+    };
   } catch (cause) {
     const error = new Error(
       'Dogrulama e-postasi su anda gonderilemedi. Lutfen daha sonra tekrar deneyin.',
     );
     error.statusCode = 503;
     error.cause = cause;
+    error.emailDisabled = Boolean(cause?.emailDisabled);
+    error.emailNotConfigured = Boolean(cause?.emailNotConfigured);
     throw error;
   }
-
-  return {
-    maskedDestination: maskDestination('email', destination),
-  };
 }
 
 async function sendPasswordResetTokenMail({ destination, token }, options = {}) {
@@ -132,19 +140,23 @@ async function sendPasswordResetTokenMail({ destination, token }, options = {}) 
     const resetUrl = buildAuthLink('/reset-password', {
       token,
     });
-    await sendResetPasswordEmail(destination, resetUrl, options);
+    const delivery = await sendResetPasswordEmail(destination, resetUrl, options);
+    return {
+      maskedDestination: maskDestination('email', destination),
+      skipped: Boolean(delivery?.skipped),
+      emailDisabled: Boolean(delivery?.emailDisabled),
+      emailNotConfigured: Boolean(delivery?.emailNotConfigured),
+    };
   } catch (cause) {
     const error = new Error(
       'Sifre sifirlama e-postasi su anda gonderilemedi. Lutfen daha sonra tekrar deneyin.',
     );
     error.statusCode = 502;
     error.cause = cause;
+    error.emailDisabled = Boolean(cause?.emailDisabled);
+    error.emailNotConfigured = Boolean(cause?.emailNotConfigured);
     throw error;
   }
-
-  return {
-    maskedDestination: maskDestination('email', destination),
-  };
 }
 
 async function sendTemplatedMail({ to, subject, html, text, attachments }) {
