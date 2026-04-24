@@ -618,7 +618,7 @@ if (config.nodeEnv === 'production') {
         return;
       }
 
-      const verificationUrl = buildAuthLink('/verify-email', {
+      const verificationUrl = buildAuthLink('/auth/verify-email', {
         token: 'dev-verification-token',
       });
 

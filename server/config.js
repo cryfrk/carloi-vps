@@ -40,6 +40,25 @@ function normalizeMailFrom(mailFrom, smtpUser) {
   return raw;
 }
 
+function normalizeReplyTo(replyTo, mailFrom, smtpUser) {
+  const raw = String(replyTo || '').trim();
+  if (raw) {
+    return raw;
+  }
+
+  const normalizedFrom = String(mailFrom || '').trim();
+  const fromMatch = normalizedFrom.match(/<([^>]+)>/);
+  if (fromMatch?.[1]) {
+    return fromMatch[1].trim();
+  }
+
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedFrom)) {
+    return normalizedFrom;
+  }
+
+  return String(smtpUser || '').trim();
+}
+
 const config = {
   nodeEnv: String(process.env.NODE_ENV || 'development').trim().toLowerCase(),
   host: process.env.HOST || '0.0.0.0',
@@ -227,6 +246,19 @@ const config = {
       .trim()
       .toLowerCase() === 'true',
   smtpFrom: normalizeMailFrom(
+    process.env.SMTP_FROM ||
+      process.env.MAIL_FROM ||
+      process.env.VCARX_SMTP_FROM ||
+      process.env.VCAR_SMTP_FROM ||
+      '',
+    process.env.SMTP_USER || process.env.VCARX_SMTP_USER || process.env.VCAR_SMTP_USER || '',
+  ),
+  smtpReplyTo: normalizeReplyTo(
+    process.env.SMTP_REPLY_TO ||
+      process.env.REPLY_TO ||
+      process.env.VCARX_SMTP_REPLY_TO ||
+      process.env.VCAR_SMTP_REPLY_TO ||
+      '',
     process.env.SMTP_FROM ||
       process.env.MAIL_FROM ||
       process.env.VCARX_SMTP_FROM ||

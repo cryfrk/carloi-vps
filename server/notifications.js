@@ -2,6 +2,8 @@ const { config } = require('./config');
 const { sendEmail, sendResetPasswordEmail, sendVerificationEmail } = require('./mailer');
 const { sendBrevoSms } = require('./sms');
 
+const VERIFY_EMAIL_WEB_PATH = '/auth/verify-email';
+
 function maskDestination(channel, destination) {
   const value = String(destination || '').trim();
   if (channel === 'phone') {
@@ -35,7 +37,7 @@ function buildAuthLink(pathname, params) {
 async function sendVerificationCode({ channel, destination, code }) {
   if (channel === 'email') {
     try {
-      const verificationUrl = buildAuthLink('/verify-email', {
+      const verificationUrl = buildAuthLink(VERIFY_EMAIL_WEB_PATH, {
         email: destination,
         code,
       });
@@ -102,7 +104,7 @@ async function sendPasswordResetMail({ destination, code }, options = {}) {
 
 async function sendVerificationTokenMail({ destination, token }, options = {}) {
   try {
-    const verificationUrl = buildAuthLink('/verify-email', {
+    const verificationUrl = buildAuthLink(VERIFY_EMAIL_WEB_PATH, {
       token,
     });
     const delivery = await sendVerificationEmail(destination, verificationUrl, options);

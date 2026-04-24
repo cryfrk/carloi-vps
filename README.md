@@ -60,13 +60,14 @@ cd carloi
 cp .env.vps.example .env.vps
 ```
 
-Ilk smoke test icin `.env.vps.example` dosyasi bilerek `development + VCARX_SKIP_VALIDATION=true + http://localhost` ile gelir.
+`.env.vps.example` dosyasi production odakli gelir. Gecici smoke test icin gerekirse `NODE_ENV=development`, `VCARX_SKIP_VALIDATION=true` ve localhost/IP tabanli URL override'lari kullanabilirsiniz.
 
 Gercek production domain/TLS hazir oldugunda `.env.vps` icinde en az su alanlari guncelleyin:
 
 - `VCARX_PUBLIC_BASE_URL`
 - `APP_BASE_URL`
 - `VCARX_SHARE_BASE_URL`
+- `VCARX_PAYMENT_PAGE_BASE_URL`
 - `EXPO_PUBLIC_API_BASE_URL`
 - `NEXT_PUBLIC_API_BASE_URL`
 - `VCARX_SESSION_SECRET`
@@ -161,6 +162,7 @@ SMTP_SECURE=false
 SMTP_USER=info@carloi.com
 SMTP_PASS=uygulama-sifresi
 SMTP_FROM="Carloi <info@carloi.com>"
+SMTP_REPLY_TO=info@carloi.com
 ```
 
 Gecici smoke test icin e-postayi bilincli olarak kapatmak isterseniz:
@@ -178,6 +180,25 @@ SMTP icin zorunlu alanlar:
 - `SMTP_USER`
 - `SMTP_PASS`
 - `SMTP_FROM` veya `MAIL_FROM`
+
+Doğrulama e-postasi URL formati:
+
+- `https://www.carloi.com/auth/verify-email?token=...`
+
+Base URL ayrimi:
+
+- `APP_BASE_URL=https://www.carloi.com`
+- `VCARX_SHARE_BASE_URL=https://www.carloi.com`
+- `VCARX_PUBLIC_BASE_URL=https://api.carloi.com`
+- `VCARX_PAYMENT_PAGE_BASE_URL=https://www.carloi.com`
+
+Mail teslim edilebilirligi icin DNS notlari:
+
+- SPF: SMTP saglayicinizin onerdiği SPF kaydini alan adiniza ekleyin.
+- DKIM: SMTP/Brevo saglayicinizin verdigi DKIM selector ve public key kayitlarini eksiksiz yayinlayin.
+- DMARC: En az `p=none` ile baslayin, izleme sonrasi `quarantine` veya `reject` politikasina gecin.
+- `SMTP_FROM` ve `SMTP_REPLY_TO` alanlari ayni dogrulanmis domain uzerinden olmali.
+- Mail gondermeden once `info@carloi.com` adresinin saglayici panelinde dogrulandigini kontrol edin.
 
 Register akisi mail timeout'u yuzunden bloke olmaz.
 

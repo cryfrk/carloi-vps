@@ -28,14 +28,16 @@ cd carloi
 cp .env.vps.example .env.vps
 ```
 
-`.env.vps.example` dosyasi ilk smoke test icin bilerek daha esnek gelir:
+`.env.vps.example` dosyasi artik production odakli gelir:
 
-- `NODE_ENV=development`
-- `VCARX_SKIP_VALIDATION=true`
-- `VCARX_REQUIRE_HTTPS=false`
-- `VCARX_TRUST_PROXY=false`
+- `NODE_ENV=production`
+- `VCARX_SKIP_VALIDATION=false`
+- `VCARX_REQUIRE_HTTPS=true`
+- `VCARX_TRUST_PROXY=true`
 - `VCARX_DISABLE_EMAIL=false`
 - `STORAGE_DRIVER=local`
+
+Ilk smoke test icin gerekirse bu alanlari gecici olarak localhost/IP degerleriyle override edebilirsiniz.
 
 Gercek production domain/TLS hazir oldugunda `.env.vps` icinde sunlari guncelleyin:
 
@@ -46,6 +48,7 @@ Gercek production domain/TLS hazir oldugunda `.env.vps` icinde sunlari guncelley
 - `VCARX_PUBLIC_BASE_URL=https://api.sizin-domaininiz.com`
 - `APP_BASE_URL=https://sizin-domaininiz.com`
 - `VCARX_SHARE_BASE_URL=https://sizin-domaininiz.com`
+- `VCARX_PAYMENT_PAGE_BASE_URL=https://sizin-domaininiz.com`
 - `NEXT_PUBLIC_API_BASE_URL=https://api.sizin-domaininiz.com`
 - `EXPO_PUBLIC_API_BASE_URL=https://api.sizin-domaininiz.com`
 - `VCARX_SESSION_SECRET`
@@ -58,6 +61,7 @@ Gercek production domain/TLS hazir oldugunda `.env.vps` icinde sunlari guncelley
 - `SMTP_USER`
 - `SMTP_PASS`
 - `SMTP_FROM`
+- `SMTP_REPLY_TO`
 - `VCARX_DISABLE_EMAIL=false`
 - `SMTP_DISABLED=false`
 
@@ -120,11 +124,13 @@ SMTP_SECURE=false
 SMTP_USER=info@carloi.com
 SMTP_PASS=uygulama-sifresi
 SMTP_FROM="Carloi <info@carloi.com>"
+SMTP_REPLY_TO=info@carloi.com
 ```
 
 Notlar:
 
 - `SMTP_FROM` tercih edilen yeni anahtardir; `MAIL_FROM` geriye donuk olarak halen kabul edilir.
+- Dogrulama e-postasi linki web domaine gitmelidir: `https://www.carloi.com/auth/verify-email?token=...`
 - SMTP alanlari eksikse ve `VCARX_DISABLE_EMAIL=false` ise production startup validation artik hata verir.
 - Gecici smoke test icin e-postayi kapatmak isterseniz:
 
@@ -132,6 +138,16 @@ Notlar:
 VCARX_DISABLE_EMAIL=true
 SMTP_DISABLED=true
 ```
+
+## 6.1 Mail teslim edilebilirligi
+
+Hotmail/Gmail gereksize dusme riskini azaltmak icin:
+
+- SPF kaydini SMTP saglayicinizin dokumaniyla birebir yayinlayin.
+- DKIM selector kayitlarini eksiksiz ekleyin ve panelde domain dogrulamasini tamamlayin.
+- DMARC kaydini en az `p=none` ile acin; loglari izledikten sonra `quarantine` veya `reject` kullanin.
+- `SMTP_FROM` ve `SMTP_REPLY_TO` icin ayni dogrulanmis domaini kullanin.
+- Uretim maillerinde sade HTML + plain text alternatif gonderin; bu repo artik her iki formati da uretir.
 
 ## 7. Opsiyonel servisler
 

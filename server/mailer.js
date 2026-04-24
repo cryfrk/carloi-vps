@@ -103,23 +103,31 @@ function renderMailLayout({
   const safeFooter = escapeHtml(footer);
   const safeEyebrow = escapeHtml(eyebrow);
   const safePreheader = escapeHtml(preheader);
+  const safeButtonHref = escapeHtml(buttonHref);
   const buttonHtml = buttonHref
-    ? `<a href="${escapeHtml(buttonHref)}" style="display:inline-block;background:#dc2626;color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;line-height:1;padding:14px 24px;border-radius:14px;">${escapeHtml(buttonLabel)}</a>`
-    : `<div style="display:inline-block;background:#dc2626;color:#ffffff;font-weight:700;font-size:15px;line-height:1;padding:14px 24px;border-radius:14px;">${escapeHtml(buttonLabel)}</div>`;
+    ? `<a href="${safeButtonHref}" style="display:inline-block;background:#111827;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;line-height:1;padding:14px 22px;border-radius:10px;">${escapeHtml(buttonLabel)}</a>`
+    : `<div style="display:inline-block;background:#111827;color:#ffffff;font-weight:600;font-size:15px;line-height:1;padding:14px 22px;border-radius:10px;">${escapeHtml(buttonLabel)}</div>`;
   const valueBlock = safeValue
-    ? `<div style="margin:0 0 24px;padding:18px 20px;border-radius:14px;background:#fafafa;border:1px solid #e5e7eb;text-align:center;"><div style="font-size:30px;font-weight:800;letter-spacing:4px;color:#111827;">${safeValue}</div></div>`
+    ? `<div style="margin:0 0 20px;padding:16px 18px;border-radius:10px;background:#f8fafc;border:1px solid #d1d5db;text-align:center;"><div style="font-size:28px;font-weight:700;letter-spacing:4px;color:#111827;">${safeValue}</div></div>`
+    : '';
+  const fallbackBlock = buttonHref
+    ? `<div style="margin:18px 0 0;padding:14px 16px;border-radius:10px;background:#f8fafc;border:1px solid #e5e7eb;">` +
+        `<div style="font-size:13px;line-height:1.6;color:#374151;margin-bottom:8px;">Buton calismazsa asagidaki dogrudan baglantiyi tarayicinizda acabilirsiniz:</div>` +
+        `<a href="${safeButtonHref}" style="font-size:13px;line-height:1.6;color:#111827;word-break:break-all;text-decoration:underline;">${safeButtonHref}</a>` +
+      `</div>`
     : '';
 
   return (
     `<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">${safePreheader}</div>` +
-    `<div style="margin:0;padding:32px 16px;background:#ffffff;font-family:Inter, Arial, sans-serif;color:#111827;">` +
-    `<div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #ececec;border-radius:16px;padding:36px 32px;box-shadow:0 12px 36px rgba(17,24,39,.08);">` +
-    `<div style="font-size:12px;font-weight:800;letter-spacing:1.6px;color:#111827;text-transform:uppercase;margin-bottom:14px;">${safeEyebrow}</div>` +
-    `<h1 style="margin:0 0 12px;font-size:30px;line-height:1.15;color:#111827;">${safeTitle}</h1>` +
-    `<p style="margin:0 0 24px;font-size:15px;line-height:1.75;color:#4b5563;">${safeBody}</p>` +
+    `<div style="margin:0;padding:24px 12px;background:#f5f5f5;font-family:Arial,Helvetica,sans-serif;color:#111827;">` +
+    `<div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:14px;padding:28px 24px;">` +
+    `<div style="font-size:13px;font-weight:700;letter-spacing:.08em;color:#111827;text-transform:uppercase;margin-bottom:12px;">${safeEyebrow}</div>` +
+    `<h1 style="margin:0 0 12px;font-size:28px;line-height:1.25;color:#111827;">${safeTitle}</h1>` +
+    `<p style="margin:0 0 20px;font-size:15px;line-height:1.7;color:#374151;">${safeBody}</p>` +
     valueBlock +
     `<div style="margin:0 0 24px;">${buttonHtml}</div>` +
-    `<p style="margin:0;font-size:13px;line-height:1.7;color:#6b7280;">${safeFooter}</p>` +
+    fallbackBlock +
+    `<p style="margin:20px 0 0;font-size:13px;line-height:1.7;color:#6b7280;">${safeFooter}</p>` +
     `</div>` +
     `</div>`
   );
@@ -202,6 +210,7 @@ function buildSmtpLogContext(extra = {}, error) {
     secure: transportSecure,
     user: config.smtpUser || '',
     from: config.smtpFrom || '',
+    replyTo: config.smtpReplyTo || '',
     tls: transportTls,
     ...extra,
     errorType: classifySmtpError(error),
@@ -357,6 +366,7 @@ async function sendEmail(to, subject, html, text, options = {}) {
         () =>
           transporter.sendMail({
             from: config.smtpFrom,
+            replyTo: config.smtpReplyTo || undefined,
             to,
             subject,
             html,
@@ -368,6 +378,7 @@ async function sendEmail(to, subject, html, text, options = {}) {
 
       logInfo('mail.send.success', {
         from: config.smtpFrom,
+        replyTo: config.smtpReplyTo || '',
         to,
         subject,
         messageId: info.messageId,
@@ -402,23 +413,21 @@ async function sendEmail(to, subject, html, text, options = {}) {
 async function sendVerificationEmail(email, codeOrLink, options = {}) {
   const safeValue = String(codeOrLink || '').trim();
   const html = renderMailLayout({
-    preheader: 'Hesabini aktiflestirmek icin e-posta adresini dogrula.',
-    title: 'Hesabini dogrula',
+    preheader: 'Carloi hesabini etkinlestirmek icin e-posta adresinizi dogrulayin.',
+    title: 'Carloi hesabinizi dogrulayin',
     body:
-      'Carloi hesabini guvenle kullanmaya baslamak icin e-posta adresini dogrulaman gerekiyor.\nAsagidaki butona tiklayarak hesabini aktiflestirebilirsin.' +
+      'Carloi hesabinizin size ait oldugunu onaylamak icin asagidaki baglantiyi kullanin.\nBu baglanti hesabinizi etkinlestirmek icin kullanilir.' +
       (isHttpUrl(safeValue) ? '' : `\n\nDogrulama kodun: ${safeValue}`),
     value: isHttpUrl(safeValue) ? '' : safeValue,
-    buttonLabel: 'Hesabimi Dogrula',
+    buttonLabel: 'Hesabimi dogrula',
     buttonHref: isHttpUrl(safeValue) ? safeValue : '',
-    footer: 'Eger bu hesabi sen olusturmadiysan bu e-postayi gormezden gelebilirsin.',
+    footer: 'Bu istegi siz yapmadiysaniz e-postayi dikkate almayabilirsiniz. Bu mesaj yalnizca hesap dogrulama amaciyla gonderilmistir.',
   });
   const text =
-    `Carloi hesabini dogrula\n\n` +
-    `Hesabini aktiflestirmek icin e-posta adresini dogrula.\n\n` +
-    `Carloi hesabini guvenle kullanmaya baslamak icin e-posta adresini dogrulaman gerekiyor.\n` +
-    `Asagidaki baglanti veya kod ile hesabini aktiflestirebilirsin.\n\n` +
+    `Carloi hesabinizi dogrulayin\n\n` +
+    `Carloi hesabinizin size ait oldugunu onaylamak icin asagidaki baglantiyi veya kodu kullanin.\n\n` +
     `${safeValue}\n\n` +
-    `Eger bu hesabi sen olusturmadiysan bu e-postayi gormezden gelebilirsin.\n\n` +
+    `Bu istegi siz yapmadiysaniz e-postayi dikkate almayabilirsiniz.\n\n` +
     `Carloi`;
 
   return sendEmail(email, 'Carloi hesabini dogrula', html, text, options);
