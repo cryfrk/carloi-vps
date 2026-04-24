@@ -1,6 +1,6 @@
 const { randomUUID } = require('node:crypto');
 
-const { db } = require('../../database');
+const { db, toDbBoolean } = require('../../database');
 
 function nowIso() {
   return new Date().toISOString();
@@ -175,7 +175,17 @@ async function ensureBillingSettingsRow() {
       currency,
       updated_at
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-  ).run('default', 0, 0, 0, 0, '0', '0', 'TRY', timestamp);
+  ).run(
+    'default',
+    toDbBoolean(false),
+    toDbBoolean(false),
+    toDbBoolean(false),
+    toDbBoolean(false),
+    '0',
+    '0',
+    'TRY',
+    timestamp,
+  );
 
   return db.prepare('SELECT * FROM billing_settings WHERE id = ? LIMIT 1').get('default');
 }
@@ -184,11 +194,11 @@ async function listActiveSubscriptionPlans() {
   const statement = db.prepare(`
     SELECT *
     FROM subscription_plans
-    WHERE is_active = 1 OR is_active = TRUE
+    WHERE is_active = ?
     ORDER BY monthly_price ASC, name ASC
   `);
 
-  const rows = await statement.all();
+  const rows = await statement.all(toDbBoolean(true));
   return rows.map(mapSubscriptionPlan);
 }
 
@@ -232,8 +242,8 @@ async function upsertSubscriptionPlan(payload) {
       payload.currency || 'TRY',
       toNumber(payload.maxListingsPerMonth, 0),
       toNumber(payload.maxFeaturedListings, 0),
-      payload.isCommercialOnly ? 1 : 0,
-      payload.isActive === false ? 0 : 1,
+      toDbBoolean(payload.isCommercialOnly),
+      toDbBoolean(payload.isActive !== false),
       timestamp,
       current.id,
     );
@@ -256,8 +266,8 @@ async function upsertSubscriptionPlan(payload) {
     payload.currency || 'TRY',
     toNumber(payload.maxListingsPerMonth, 0),
     toNumber(payload.maxFeaturedListings, 0),
-    payload.isCommercialOnly ? 1 : 0,
-    payload.isActive === false ? 0 : 1,
+    toDbBoolean(payload.isCommercialOnly),
+    toDbBoolean(payload.isActive !== false),
     timestamp,
     timestamp,
   );
@@ -274,28 +284,20 @@ async function updateBillingSettings(patch) {
   const next = {
     paid_listings_enabled:
       patch.paidListingsEnabled === undefined
-        ? current.paid_listings_enabled
-        : patch.paidListingsEnabled
-          ? 1
-          : 0,
+        ? toDbBoolean(current.paid_listings_enabled)
+        : toDbBoolean(patch.paidListingsEnabled),
     subscription_required_for_commercial:
       patch.subscriptionRequiredForCommercial === undefined
-        ? current.subscription_required_for_commercial
-        : patch.subscriptionRequiredForCommercial
-          ? 1
-          : 0,
+        ? toDbBoolean(current.subscription_required_for_commercial)
+        : toDbBoolean(patch.subscriptionRequiredForCommercial),
     individual_listing_fee_enabled:
       patch.individualListingFeeEnabled === undefined
-        ? current.individual_listing_fee_enabled
-        : patch.individualListingFeeEnabled
-          ? 1
-          : 0,
+        ? toDbBoolean(current.individual_listing_fee_enabled)
+        : toDbBoolean(patch.individualListingFeeEnabled),
     featured_listing_fee_enabled:
       patch.featuredListingFeeEnabled === undefined
-        ? current.featured_listing_fee_enabled
-        : patch.featuredListingFeeEnabled
-          ? 1
-          : 0,
+        ? toDbBoolean(current.featured_listing_fee_enabled)
+        : toDbBoolean(patch.featuredListingFeeEnabled),
     individual_listing_fee_amount:
       patch.individualListingFeeAmount === undefined
         ? current.individual_listing_fee_amount

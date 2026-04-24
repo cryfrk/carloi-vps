@@ -1,5 +1,5 @@
 const { config } = require('../../config');
-const { db } = require('../../database');
+const { db, toDbBoolean } = require('../../database');
 const { getListingCompliance, upsertListingCompliance } = require('../compliance/compliance.repository');
 const {
   CONSENT_REQUIREMENTS,
@@ -336,10 +336,8 @@ async function updateUserBillingState(userId, patch) {
         ? current.subscription_plan_id || null
         : patch.subscriptionPlanId,
       patch.canCreatePaidListings === undefined
-        ? current.can_create_paid_listings || 0
-        : patch.canCreatePaidListings
-          ? 1
-          : 0,
+        ? toDbBoolean(current.can_create_paid_listings)
+        : toDbBoolean(patch.canCreatePaidListings),
       nowIso(),
       userId,
     );

@@ -1,6 +1,6 @@
 const { randomUUID } = require('node:crypto');
 
-const { db } = require('../../database');
+const { db, toDbBoolean } = require('../../database');
 const { decryptText } = require('../../security');
 
 function nowIso() {
@@ -174,10 +174,8 @@ async function updateUserCommercialState(userId, patch) {
         ? current.commercial_reviewed_by_admin_id || null
         : patch.commercialReviewedByAdminId,
       patch.canCreatePaidListings === undefined
-        ? current.can_create_paid_listings || 0
-        : patch.canCreatePaidListings
-          ? 1
-          : 0,
+        ? toDbBoolean(current.can_create_paid_listings)
+        : toDbBoolean(patch.canCreatePaidListings),
       patch.yearlyVehicleSaleCount === undefined
         ? current.yearly_vehicle_sale_count || 0
         : patch.yearlyVehicleSaleCount,
@@ -185,10 +183,8 @@ async function updateUserCommercialState(userId, patch) {
         ? current.yearly_vehicle_listing_count || 0
         : patch.yearlyVehicleListingCount,
       patch.commercialBehaviorFlag === undefined
-        ? current.commercial_behavior_flag || 0
-        : patch.commercialBehaviorFlag
-          ? 1
-          : 0,
+        ? toDbBoolean(current.commercial_behavior_flag)
+        : toDbBoolean(patch.commercialBehaviorFlag),
       patch.riskScore === undefined ? current.risk_score || 0 : patch.riskScore,
       patch.riskLevel ?? current.risk_level ?? 'low',
       patch.fraudFlagCount === undefined
@@ -374,7 +370,7 @@ async function addCommercialDocument(payload) {
       payload.reviewedAt || null,
       payload.rejectReason || null,
       payload.verificationMethod || 'unverified',
-      payload.suspiciousFlag ? 1 : 0,
+      toDbBoolean(payload.suspiciousFlag),
     );
 
   return getCommercialDocumentById(id);
@@ -436,12 +432,8 @@ async function updateCommercialDocumentById(documentId, patch) {
       patch.rejectReason === undefined ? existing.rejectReason : patch.rejectReason,
       patch.verificationMethod ?? existing.verificationMethod,
       patch.suspiciousFlag === undefined
-        ? existing.suspiciousFlag
-          ? 1
-          : 0
-        : patch.suspiciousFlag
-          ? 1
-          : 0,
+        ? toDbBoolean(existing.suspiciousFlag)
+        : toDbBoolean(patch.suspiciousFlag),
       documentId,
     );
 
@@ -550,14 +542,14 @@ async function listCommercialProfilesByStatus(status) {
               ) AS document_count,
               (
                 SELECT COUNT(*) FROM commercial_documents cd
-                WHERE cd.commercial_profile_id = cp.id AND cd.suspicious_flag = 1
+                WHERE cd.commercial_profile_id = cp.id AND cd.suspicious_flag = ?
               ) AS suspicious_document_count
        FROM commercial_profiles cp
        JOIN users u ON u.id = cp.user_id
        WHERE (? IS NULL OR cp.status = ?)
        ORDER BY cp.updated_at DESC`,
     )
-    .all(status || null, status || null);
+    .all(toDbBoolean(true), status || null, status || null);
 
   return rows.map((row) => ({
     profile: mapProfile(row),

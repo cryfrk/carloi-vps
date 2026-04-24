@@ -38,6 +38,8 @@ services:
       VCARX_TRUST_PROXY: ${VCARX_TRUST_PROXY:-true}
     volumes:
       - uploads_data:/app/uploads
+    ports:
+      - "8080:8080"
     expose:
       - "8080"
     healthcheck:

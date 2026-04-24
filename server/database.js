@@ -21,6 +21,24 @@ function isPostgresMode() {
   return Boolean(config.databaseUrl);
 }
 
+function normalizeBoolean(value) {
+  if (typeof value === 'boolean') {
+    return value;
+  }
+
+  if (typeof value === 'number') {
+    return value === 1;
+  }
+
+  const normalized = String(value || '').trim().toLowerCase();
+  return normalized === 'true' || normalized === '1';
+}
+
+function toDbBoolean(value) {
+  const normalized = normalizeBoolean(value);
+  return isPostgresMode() ? normalized : normalized ? 1 : 0;
+}
+
 function isTransientPostgresError(error) {
   const message = String(error?.message || '').toLowerCase();
   const code = String(error?.code || '').trim().toUpperCase();
@@ -295,4 +313,6 @@ module.exports = {
   db,
   initializeDatabase,
   isPostgresMode,
+  normalizeBoolean,
+  toDbBoolean,
 };

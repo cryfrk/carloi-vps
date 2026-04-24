@@ -1,7 +1,7 @@
 ﻿const { randomBytes, randomUUID, scryptSync, timingSafeEqual } = require('node:crypto');
 const { createHash } = require('node:crypto');
 const { config } = require('./config');
-const { db, initializeDatabase } = require('./database');
+const { db, initializeDatabase, toDbBoolean } = require('./database');
 const { verifyAppStoreSubscriptionPurchase } = require('./appleStore');
 const { defaultAiMessages, defaultProfileSegment, defaultSettings } = require('./defaults');
 const { verifyGooglePlaySubscriptionPurchase } = require('./googlePlay');
@@ -2761,7 +2761,7 @@ async function adjustYearlyActivityCounters(
     .run(
       nextListingCount,
       nextSaleCount,
-      alreadyFlagged || signal.triggered ? 1 : 0,
+      toDbBoolean(alreadyFlagged || signal.triggered),
       nextRiskScore,
       nextRiskLevel,
       timestamp,

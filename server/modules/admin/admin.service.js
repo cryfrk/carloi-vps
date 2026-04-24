@@ -1,4 +1,4 @@
-const { db } = require('../../database');
+const { db, toDbBoolean } = require('../../database');
 const { decryptJson, decryptText } = require('../../security');
 const { canViewMessageContent } = require('./access.service');
 const { getFeatureFlagSnapshot, isFeatureEnabled } = require('../feature-flags/config');
@@ -144,7 +144,8 @@ async function listAdminUsersSummary({
   }
 
   if (commercialBehaviorOnly) {
-    conditions.push('commercial_behavior_flag = 1');
+    conditions.push('commercial_behavior_flag = ?');
+    params.push(toDbBoolean(true));
   }
 
   const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
@@ -428,11 +429,13 @@ async function listAdminListingsSummary({
   }
 
   if (duplicatePlateOnly) {
-    conditions.push(`COALESCE(lc.duplicate_plate_flag, 0) = 1`);
+    conditions.push(`COALESCE(lc.duplicate_plate_flag, ?) = ?`);
+    params.push(toDbBoolean(false), toDbBoolean(true));
   }
 
   if (abnormalPriceOnly) {
-    conditions.push(`COALESCE(lc.abnormal_price_flag, 0) = 1`);
+    conditions.push(`COALESCE(lc.abnormal_price_flag, ?) = ?`);
+    params.push(toDbBoolean(false), toDbBoolean(true));
   }
 
   if (normalizedQuery) {
