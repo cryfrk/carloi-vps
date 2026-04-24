@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
 
-const DEFAULT_API_BASE_URL = 'https://carloi-api-76975332760.europe-west3.run.app';
+const DEFAULT_API_BASE_URL = 'https://api.carloi.com';
 const envBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
 
 const baseUrls = {
