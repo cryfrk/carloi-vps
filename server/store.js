@@ -3,6 +3,7 @@ const { createHash } = require('node:crypto');
 const { config } = require('./config');
 const { db, initializeDatabase, isPostgresMode, toDbBoolean } = require('./database');
 const { getMailServiceState } = require('./mailer');
+const { getSmsServiceState, sendBrevoSms } = require('./sms');
 const { verifyAppStoreSubscriptionPurchase } = require('./appleStore');
 const { defaultAiMessages, defaultProfileSegment, defaultSettings } = require('./defaults');
 const { verifyGooglePlaySubscriptionPurchase } = require('./googlePlay');
@@ -302,6 +303,19 @@ const sqliteSchemaSql = `
     expires_at TEXT NOT NULL,
     consumed_at TEXT,
     created_at TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS sms_verification_codes (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    phone TEXT NOT NULL,
+    phone_lookup TEXT NOT NULL,
+    code TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    used INTEGER NOT NULL DEFAULT 0,
+    used_at TEXT,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
   );
 
   CREATE TABLE IF NOT EXISTS auth_tokens (
@@ -848,6 +862,15 @@ function getMailAvailabilityFlags() {
   };
 }
 
+function getSmsAvailabilityFlags() {
+  const state = getSmsServiceState();
+  return {
+    smsDisabled: state.reason === 'disabled',
+    smsNotConfigured: state.reason === 'not_configured',
+    smsAvailable: state.available,
+  };
+}
+
 function hashPassword(password) {
   const salt = randomBytes(16).toString('hex');
   const hash = scryptSync(password, salt, 64).toString('hex');
@@ -938,6 +961,28 @@ async function migrateLegacyData() {
   await ensureColumn('commercial_profiles', 'submitted_at', 'TEXT');
   await ensureColumn('commercial_profiles', 'document_truthfulness_accepted_at', 'TEXT');
   await ensureColumn('commercial_profiles', 'additional_verification_acknowledged_at', 'TEXT');
+
+  const smsVerificationUsedDefinition = isPostgresMode()
+    ? 'BOOLEAN NOT NULL DEFAULT FALSE'
+    : 'INTEGER NOT NULL DEFAULT 0';
+  const smsTimestampType = isPostgresMode() ? 'TIMESTAMPTZ' : 'TEXT';
+  const smsCreatedAtDefault = isPostgresMode() ? 'NOW()' : "(datetime('now'))";
+
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS sms_verification_codes (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      phone TEXT NOT NULL,
+      phone_lookup TEXT NOT NULL,
+      code TEXT NOT NULL,
+      expires_at ${smsTimestampType} NOT NULL,
+      used ${smsVerificationUsedDefinition},
+      used_at ${smsTimestampType},
+      created_at ${smsTimestampType} NOT NULL DEFAULT ${smsCreatedAtDefault}
+    );
+    CREATE INDEX IF NOT EXISTS idx_sms_verification_codes_user_created_at ON sms_verification_codes(user_id, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_sms_verification_codes_phone_lookup ON sms_verification_codes(phone_lookup);
+  `);
 
   if (!isPostgresMode()) {
     await db.exec(`
@@ -2512,6 +2557,205 @@ async function issueEmailVerificationCode(email) {
     verificationId: request.verificationId,
     expiresAt: request.expiresAt,
     maskedDestination: delivery.maskedDestination,
+  };
+}
+
+function createSmsServiceUnavailableError(flags) {
+  const error = new Error(
+    flags.smsDisabled
+      ? 'SMS dogrulama servisi su anda aktif degil.'
+      : 'SMS dogrulama servisi su anda yapilandirilmadi.',
+  );
+  error.statusCode = 503;
+  error.smsDisabled = Boolean(flags.smsDisabled);
+  error.smsNotConfigured = Boolean(flags.smsNotConfigured);
+  return error;
+}
+
+function resolveSmsPhoneForUser(user, providedPhone) {
+  const settings = parseSettings(user);
+  const phone = normalizePhone(providedPhone || settings.phone || sanitizeStoredPhone(user.phone));
+
+  if (!phone) {
+    const error = new Error('SMS dogrulamasi icin gecerli bir telefon numarasi gerekli.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return phone;
+}
+
+async function sendSmsVerificationCode(userId, providedPhone) {
+  const user = await getUserById(userId);
+  if (!user) {
+    const error = new Error('Kullanici bulunamadi.');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const smsState = getSmsAvailabilityFlags();
+  if (!smsState.smsAvailable) {
+    throw createSmsServiceUnavailableError(smsState);
+  }
+
+  const phone = resolveSmsPhoneForUser(user, providedPhone);
+  const maskedDestination = maskVerificationDestination('phone', phone);
+
+  const latestCode = await db
+    .prepare(
+      `SELECT *
+       FROM sms_verification_codes
+       WHERE user_id = ?
+       ORDER BY created_at DESC
+       LIMIT 1`,
+    )
+    .get(userId);
+
+  if (latestCode?.created_at) {
+    const elapsedMs = Date.now() - new Date(latestCode.created_at).getTime();
+    if (elapsedMs < 60_000) {
+      const error = new Error('Yeni SMS kodu istemeden once 60 saniye bekleyin.');
+      error.statusCode = 429;
+      throw error;
+    }
+  }
+
+  const id = randomUUID();
+  const code = makeVerificationCode();
+  const createdAt = nowIso();
+  const expiresAt = new Date(Date.now() + 5 * 60_000).toISOString();
+
+  await db.prepare(
+    `INSERT INTO sms_verification_codes (
+      id, user_id, phone, phone_lookup, code, expires_at, used, used_at, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  ).run(id, userId, phone, makeLookupHash(phone), code, expiresAt, toDbBoolean(false), null, createdAt);
+
+  try {
+    const delivery = await sendBrevoSms({
+      recipient: phone,
+      content: `CARLOI: Dogrulama kodunuz: ${code}`,
+      tag: 'auth_sms_verification',
+    });
+
+    await appendAuditLog({
+      actorType: 'user',
+      actorId: userId,
+      targetType: 'sms_verification_code',
+      targetId: id,
+      action: 'auth.sms_code_sent',
+      metadata: {
+        maskedDestination,
+        expiresAt,
+        messageId: delivery.messageId || null,
+      },
+      ipAddress: null,
+      userAgent: null,
+    });
+
+    return {
+      verificationId: id,
+      expiresAt,
+      maskedDestination: delivery.maskedDestination || maskedDestination,
+    };
+  } catch (cause) {
+    await db.prepare('DELETE FROM sms_verification_codes WHERE id = ?').run(id);
+    logError('auth.sms_code.send_failed', {
+      userIdSuffix: String(userId || '').slice(-6),
+      destination: maskedDestination,
+      errorMessage: cause?.message || 'unknown',
+      statusCode: cause?.statusCode || 500,
+    });
+    throw cause;
+  }
+}
+
+async function verifySmsCode(userId, verificationCode, providedPhone) {
+  const normalizedCode = String(verificationCode || '').trim();
+  if (!isSixDigitVerificationCode(normalizedCode)) {
+    const error = new Error('SMS dogrulama kodu 6 haneli sayisal olmalidir.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const user = await getUserById(userId);
+  if (!user) {
+    const error = new Error('Kullanici bulunamadi.');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const phone = providedPhone ? resolveSmsPhoneForUser(user, providedPhone) : '';
+  const row = phone
+    ? await db
+        .prepare(
+          `SELECT *
+           FROM sms_verification_codes
+           WHERE user_id = ?
+             AND phone_lookup = ?
+             AND used = ?
+           ORDER BY created_at DESC
+           LIMIT 1`,
+        )
+        .get(userId, makeLookupHash(phone), toDbBoolean(false))
+    : await db
+        .prepare(
+          `SELECT *
+           FROM sms_verification_codes
+           WHERE user_id = ?
+             AND used = ?
+           ORDER BY created_at DESC
+           LIMIT 1`,
+        )
+        .get(userId, toDbBoolean(false));
+
+  if (!row) {
+    const error = new Error('SMS dogrulama kodu bulunamadi.');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (row.used) {
+    const error = new Error('Bu SMS dogrulama kodu daha once kullanildi.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (new Date(row.expires_at).getTime() <= Date.now()) {
+    const error = new Error('SMS dogrulama kodunun suresi doldu.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (String(row.code || '').trim() !== normalizedCode) {
+    const error = new Error('SMS dogrulama kodu hatali.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  await db.prepare(
+    `UPDATE sms_verification_codes
+     SET used = ?, used_at = ?
+     WHERE id = ?`,
+  ).run(toDbBoolean(true), nowIso(), row.id);
+
+  await appendAuditLog({
+    actorType: 'user',
+    actorId: userId,
+    targetType: 'sms_verification_code',
+    targetId: row.id,
+    action: 'auth.sms_code_verified',
+    metadata: {
+      maskedDestination: maskVerificationDestination('phone', row.phone),
+    },
+    ipAddress: null,
+    userAgent: null,
+  });
+
+  return {
+    verified: true,
+    maskedDestination: maskVerificationDestination('phone', row.phone),
+    verifiedAt: nowIso(),
   };
 }
 
@@ -5481,13 +5725,14 @@ module.exports = {
   logoutAccount,
   recordInsurancePayment,
   registerAccount,
-  requestPasswordReset,
-  resetPasswordWithCode,
-  resetPasswordWithToken,
-  resendEmailVerificationCode,
-  saveOnboarding,
-  sendConversationMessage,
-  sendInsurancePolicyMail,
+    requestPasswordReset,
+    resetPasswordWithCode,
+    resetPasswordWithToken,
+    resendEmailVerificationCode,
+    sendSmsVerificationCode,
+    saveOnboarding,
+    sendConversationMessage,
+    sendInsurancePolicyMail,
   signInWithSocialIdentity,
   setInsuranceQuote,
   setListingSoldStatus,
@@ -5499,9 +5744,10 @@ module.exports = {
   toggleRepost,
   trackListing,
   initializeStore,
-  updateAiMessageContent,
-  updateProfileMedia,
-  updateSettings,
-  verifyEmailCode,
-  verifyEmailToken,
-};
+    updateAiMessageContent,
+    updateProfileMedia,
+    updateSettings,
+    verifyEmailCode,
+    verifySmsCode,
+    verifyEmailToken,
+  };

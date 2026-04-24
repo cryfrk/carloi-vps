@@ -30,7 +30,7 @@ function buildSystemReadiness() {
   const otpMailReady = config.disableEmail
     ? false
     : Boolean(config.smtpHost && config.smtpUser && config.smtpPass && config.smtpFrom);
-  const otpSmsReady = Boolean(config.twilioAccountSid && config.twilioAuthToken && config.twilioFrom);
+  const otpSmsReady = Boolean(config.smsEnabled && config.brevoApiKey);
   const securityReady = Boolean(
     config.sessionSecret &&
       config.sessionSecret !== 'vcarx-local-secret' &&
@@ -70,7 +70,7 @@ function buildSystemReadiness() {
     warnings.push('VCARX_DISABLE_EMAIL=true oldugu icin e-posta gonderimi bilerek devre disi.');
   }
   if (!config.disableEmail && !otpMailReady && !otpSmsReady) {
-    warnings.push('Dogrulama kodu gonderimi icin ne SMTP ne de Twilio aktif gorunuyor.');
+    warnings.push('Dogrulama kodu gonderimi icin ne SMTP ne de Brevo SMS aktif gorunuyor.');
   } else if (config.disableEmail && !otpSmsReady) {
     warnings.push('E-posta dogrulamasi kapali. Mobil bildirim, SMS veya manuel destek akisini canliya cikmadan netlestirin.');
   }
@@ -124,6 +124,7 @@ function buildSystemReadiness() {
       emailReady: otpMailReady,
       emailDisabled: config.disableEmail,
       smsReady: otpSmsReady,
+      smsEnabled: config.smsEnabled,
     },
     insurancePayments: {
       ready: insurancePaymentReady,

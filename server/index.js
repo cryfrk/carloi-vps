@@ -106,6 +106,7 @@ const {
   resetPasswordWithToken,
   resendEmailVerificationCode,
   saveOnboarding,
+  sendSmsVerificationCode,
   sendConversationMessage,
   sendInsurancePolicyMail,
   setInsuranceQuote,
@@ -122,6 +123,7 @@ const {
   updateProfileMedia,
   updateSettings,
   verifyEmailCode,
+  verifySmsCode,
   verifyEmailToken,
   initializeStore,
 } = require('./store');
@@ -693,6 +695,35 @@ app.post('/api/auth/verification/start', authLimiter, async (request, response, 
       expiresAt: result.expiresAt,
       maskedDestination: result.maskedDestination,
       message: 'Doğrulama kodu gönderildi.',
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post('/api/auth/send-sms-code', requireAuth, async (request, response, next) => {
+  try {
+    const result = await sendSmsVerificationCode(request.user.id, request.body?.phone);
+    response.status(201).json({
+      success: true,
+      message: 'SMS dogrulama kodu gonderildi.',
+      verificationId: result.verificationId,
+      expiresAt: result.expiresAt,
+      maskedDestination: result.maskedDestination,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post('/api/auth/verify-sms-code', requireAuth, async (request, response, next) => {
+  try {
+    const result = await verifySmsCode(request.user.id, request.body?.code, request.body?.phone);
+    response.json({
+      success: true,
+      message: 'SMS dogrulamasi tamamlandi.',
+      maskedDestination: result.maskedDestination,
+      verifiedAt: result.verifiedAt,
     });
   } catch (error) {
     next(error);

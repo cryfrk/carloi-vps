@@ -1,12 +1,6 @@
-const twilio = require('twilio');
-
 const { config } = require('./config');
 const { sendEmail, sendResetPasswordEmail, sendVerificationEmail } = require('./mailer');
-
-let twilioClient = null;
-if (config.twilioAccountSid && config.twilioAuthToken) {
-  twilioClient = twilio(config.twilioAccountSid, config.twilioAuthToken);
-}
+const { sendBrevoSms } = require('./sms');
 
 function maskDestination(channel, destination) {
   const value = String(destination || '').trim();
@@ -60,30 +54,25 @@ async function sendVerificationCode({ channel, destination, code }) {
     };
   }
 
-  if (!twilioClient || !config.twilioFrom) {
-    const error = new Error('SMS dogrulama servisi yapilandirilmadi.');
-    error.statusCode = 503;
-    throw error;
-  }
-
   try {
-    await twilioClient.messages.create({
-      from: config.twilioFrom,
-      to: destination,
-      body: `Carloi dogrulama kodunuz: ${code}. Kod 10 dakika gecerlidir.`,
+    const delivery = await sendBrevoSms({
+      recipient: destination,
+      content: `CARLOI: Dogrulama kodunuz: ${code}`,
+      tag: 'auth_verification',
     });
+    return {
+      maskedDestination: delivery.maskedDestination || maskDestination(channel, destination),
+    };
   } catch (cause) {
     const error = new Error(
-      'SMS dogrulama kodu gonderilemedi. Twilio hesabini, SMS gonderebilen numarayi ve alici telefon formatini kontrol edin.',
+      'SMS dogrulama kodu gonderilemedi. Brevo SMS ayarlarini, gonderici bilgisini ve telefon formatini kontrol edin.',
     );
     error.statusCode = 502;
     error.cause = cause;
+    error.smsDisabled = Boolean(cause?.smsDisabled);
+    error.smsNotConfigured = Boolean(cause?.smsNotConfigured);
     throw error;
   }
-
-  return {
-    maskedDestination: maskDestination(channel, destination),
-  };
 }
 
 async function sendPasswordResetMail({ destination, code }, options = {}) {

@@ -243,6 +243,12 @@ const config = {
   smtpEnableLegacyTlsInProduction:
     String(process.env.SMTP_ENABLE_LEGACY_TLS_IN_PRODUCTION || 'false').trim().toLowerCase() === 'true',
   smtpTlsServername: String(process.env.SMTP_TLS_SERVERNAME || '').trim(),
+  smsEnabled: String(process.env.SMS_ENABLED || 'false').trim().toLowerCase() === 'true',
+  brevoApiKey: String(process.env.BREVO_API_KEY || '').trim(),
+  brevoSmsSender: String(process.env.BREVO_SMS_SENDER || 'CARLOI').trim() || 'CARLOI',
+  brevoSmsApiUrl: String(
+    process.env.BREVO_SMS_API_URL || 'https://api.brevo.com/v3/transactionalSMS/send',
+  ).trim(),
   twilioAccountSid: process.env.VCARX_TWILIO_ACCOUNT_SID || process.env.VCAR_TWILIO_ACCOUNT_SID || '',
   twilioAuthToken: process.env.VCARX_TWILIO_AUTH_TOKEN || process.env.VCAR_TWILIO_AUTH_TOKEN || '',
   twilioFrom: process.env.VCARX_TWILIO_FROM || process.env.VCAR_TWILIO_FROM || '',

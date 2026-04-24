@@ -125,12 +125,17 @@ function validateStartupConfig(config) {
   }
 
   const smtpConfigured = Boolean(config.smtpHost && config.smtpPort && config.smtpUser && config.smtpPass && config.smtpFrom);
+  const smsConfigured = Boolean(config.brevoApiKey);
   if (config.disableEmail) {
     warnings.push('E-posta gonderimi devre disi. Dogrulama ve reset mailleri production ortaminda gonderilmeyecek.');
   } else if (!smtpConfigured) {
     errors.push(
       'SMTP ayarlari eksik. Production ortaminda e-posta aciksa SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS ve SMTP_FROM/MAIL_FROM zorunludur.',
     );
+  }
+
+  if (config.smsEnabled && !smsConfigured) {
+    errors.push('SMS_ENABLED=true iken BREVO_API_KEY zorunludur.');
   }
 
   if (isProduction && config.smtpTlsRejectUnauthorized === false && !config.smtpEnableLegacyTlsInProduction) {

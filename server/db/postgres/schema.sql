@@ -168,6 +168,24 @@ CREATE TABLE IF NOT EXISTS verification_codes (
   created_at TIMESTAMPTZ NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS sms_verification_codes (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  phone TEXT NOT NULL,
+  phone_lookup TEXT NOT NULL,
+  code TEXT NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  used BOOLEAN NOT NULL DEFAULT FALSE,
+  used_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_sms_verification_codes_user_created_at
+ON sms_verification_codes(user_id, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_sms_verification_codes_phone_lookup
+ON sms_verification_codes(phone_lookup);
+
 CREATE TABLE IF NOT EXISTS auth_tokens (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
