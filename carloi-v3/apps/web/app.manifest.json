@@ -1,0 +1,7 @@
+{
+  "appId": "web",
+  "surface": "consumer-web",
+  "apiBaseUrl": "https://api.carloi.com",
+  "routes": ["/", "/login", "/register", "/feed", "/explore", "/listings", "/garage", "/commercial", "/settings", "/search"],
+  "priorityFlows": ["auth", "feed", "listing-discovery", "profile", "commercial"]
+}

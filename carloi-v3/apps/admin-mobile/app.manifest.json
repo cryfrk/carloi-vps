@@ -1,0 +1,13 @@
+{
+  "appId": "admin-mobile",
+  "surface": "operations-mobile",
+  "runtime": "expo-react-native",
+  "apiBaseUrl": "https://api.carloi.com",
+  "tabs": ["dashboard", "commercial", "insurance", "messages", "users"],
+  "priorityFlows": [
+    "commercial-approve",
+    "document-check",
+    "insurance-status-review",
+    "urgent-user-actions"
+  ]
+}

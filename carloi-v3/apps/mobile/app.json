@@ -1,0 +1,43 @@
+{
+  "expo": {
+    "name": "Carloi V3",
+    "slug": "carloi-v3-mobile",
+    "scheme": "carloi-v3",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/carloi.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/carloi.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#f8fafc"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "android": {
+      "package": "com.carloi.v3.mobile",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/carloi.png",
+        "backgroundColor": "#f8fafc"
+      },
+      "permissions": [
+        "INTERNET",
+        "ACCESS_NETWORK_STATE",
+        "BLUETOOTH",
+        "BLUETOOTH_ADMIN",
+        "BLUETOOTH_CONNECT",
+        "BLUETOOTH_SCAN",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "NEARBY_WIFI_DEVICES"
+      ]
+    },
+    "plugins": [
+      "expo-secure-store"
+    ],
+    "extra": {
+      "apiBaseUrl": "https://api.carloi.com"
+    }
+  }
+}

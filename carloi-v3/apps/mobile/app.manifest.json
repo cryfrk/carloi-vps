@@ -1,0 +1,7 @@
+{
+  "appId": "mobile",
+  "surface": "consumer-mobile",
+  "apiBaseUrl": "https://api.carloi.com",
+  "tabs": ["feed", "messages", "loi-ai", "garage", "profile"],
+  "priorityFlows": ["auth", "feed", "garage", "listing-create", "commercial-onboarding"]
+}

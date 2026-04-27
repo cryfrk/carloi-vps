@@ -1,0 +1,35 @@
+{
+  "name": "@carloi-v3/web",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Carloi V3 web application",
+  "scripts": {
+    "dev": "next dev -p 3095",
+    "build": "node ./scripts/next-build.mjs",
+    "start": "node ./scripts/next-start.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@carloi-v3/api-client": "file:../../packages/api-client",
+    "@carloi-v3/garage-obd": "file:../../packages/garage-obd",
+    "@carloi-v3/legal": "file:../../packages/legal",
+    "@carloi-v3/shared": "file:../../packages/shared",
+    "@carloi-v3/ui": "file:../../packages/ui",
+    "@carloi-v3/vehicle-catalog": "file:../../packages/vehicle-catalog",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.544.0",
+    "next": "^15.5.15",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "zustand": "^5.0.8"
+  },
+  "devDependencies": {
+    "@types/node": "^24.6.0",
+    "@types/react": "^19.1.16",
+    "@types/react-dom": "^19.1.9",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.9.2"
+  }
+}

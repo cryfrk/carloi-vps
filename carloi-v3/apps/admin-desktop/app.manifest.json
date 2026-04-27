@@ -1,0 +1,26 @@
+{
+  "appId": "admin-desktop",
+  "surface": "operations-desktop",
+  "runtime": "electron",
+  "apiBaseUrl": "https://api.carloi.com",
+  "routes": [
+    "/dashboard",
+    "/users",
+    "/commercial",
+    "/insurance",
+    "/listings",
+    "/posts",
+    "/messages",
+    "/payments",
+    "/invoices",
+    "/settings",
+    "/admins"
+  ],
+  "priorityFlows": [
+    "commercial-review",
+    "insurance-quote-management",
+    "payment-reconciliation",
+    "moderation",
+    "audit-trail"
+  ]
+}

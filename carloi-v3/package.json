@@ -1,0 +1,19 @@
+{
+  "name": "carloi-v3",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace @carloi-v3/shared && npm run build --workspace @carloi-v3/api-client && npm run build --workspace @carloi-v3/vehicle-catalog && npm run build --workspace @carloi-v3/legal && npm run build --workspace @carloi-v3/ui && npm run build --workspace @carloi-v3/garage-obd && npm run build --workspace @carloi-v3/admin-core",
+    "typecheck": "npm run typecheck --workspace @carloi-v3/shared && npm run typecheck --workspace @carloi-v3/api-client && npm run typecheck --workspace @carloi-v3/vehicle-catalog && npm run typecheck --workspace @carloi-v3/legal && npm run typecheck --workspace @carloi-v3/ui && npm run typecheck --workspace @carloi-v3/garage-obd && npm run typecheck --workspace @carloi-v3/admin-core",
+    "build:admin-apps": "npm run build --workspace @carloi-v3/admin-desktop && npm run build --workspace @carloi-v3/admin-mobile",
+    "typecheck:admin-apps": "npm run typecheck --workspace @carloi-v3/admin-desktop && npm run typecheck --workspace @carloi-v3/admin-mobile",
+    "test": "node ./scripts/validate-workspace.mjs"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2"
+  }
+}

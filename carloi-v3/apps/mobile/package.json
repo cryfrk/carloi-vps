@@ -1,0 +1,48 @@
+{
+  "name": "@carloi-v3/mobile",
+  "private": true,
+  "version": "0.1.0",
+  "main": "index.js",
+  "description": "Carloi V3 Expo mobile application",
+  "scripts": {
+    "sync:icon": "node ./scripts/sync-icon.mjs",
+    "sync:android-local-properties": "node ./scripts/write-local-properties.mjs",
+    "prestart": "npm run sync:icon",
+    "start": "node ./scripts/expo-command.mjs start --clear --port 8090",
+    "preandroid": "npm run sync:icon",
+    "android": "node ./scripts/expo-command.mjs run:android --port 8090",
+    "typecheck": "tsc --noEmit",
+    "prebuild:apk-local": "npm run sync:icon",
+    "build:apk-local": "node ./scripts/build-short-path.mjs"
+  },
+  "dependencies": {
+    "@carloi-v3/api-client": "file:../../packages/api-client",
+    "@carloi-v3/garage-obd": "file:../../packages/garage-obd",
+    "@carloi-v3/legal": "file:../../packages/legal",
+    "@carloi-v3/shared": "file:../../packages/shared",
+    "@carloi-v3/ui": "file:../../packages/ui",
+    "@carloi-v3/vehicle-catalog": "file:../../packages/vehicle-catalog",
+    "@expo/vector-icons": "^15.0.3",
+    "@react-navigation/bottom-tabs": "^7.4.2",
+    "@react-navigation/native": "^7.1.10",
+    "@react-navigation/native-stack": "^7.3.14",
+    "expo": "~54.0.33",
+    "expo-constants": "~18.0.13",
+    "expo-document-picker": "~14.0.7",
+    "expo-image-picker": "~17.0.8",
+    "expo-secure-store": "~15.0.7",
+    "expo-status-bar": "~3.0.9",
+    "react": "19.1.0",
+    "react-native": "0.81.5",
+    "react-native-gesture-handler": "~2.28.0",
+    "react-native-safe-area-context": "5.6.0",
+    "react-native-screens": "~4.16.0",
+    "zustand": "^5.0.8"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.26.0",
+    "@types/react": "~19.1.10",
+    "babel-preset-expo": "~54.0.7",
+    "typescript": "~5.9.2"
+  }
+}

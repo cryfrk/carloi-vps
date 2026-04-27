@@ -1,0 +1,19 @@
+{
+  "name": "@carloi-v3/admin-desktop",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Carloi V3 admin desktop baseline",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@carloi-v3/admin-core": "file:../../packages/admin-core",
+    "@carloi-v3/api-client": "file:../../packages/api-client",
+    "@carloi-v3/shared": "file:../../packages/shared",
+    "@carloi-v3/ui": "file:../../packages/ui"
+  }
+}

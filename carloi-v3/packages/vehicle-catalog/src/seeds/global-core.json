@@ -1,0 +1,1151 @@
+{
+  "version": "2026-04-global-core",
+  "sourcePolicy": "Curated baseline of major global vehicle brands and selected widely known model families. The seed is intentionally incomplete and avoids claiming exhaustive trim, generation, or engine coverage where certainty is low.",
+  "notes": [
+    "This seed is a starting point, not a full market database.",
+    "Manual brand/model/spec entry must remain available in the product.",
+    "Admin curation and future licensed data providers can extend this dataset."
+  ],
+  "vehicleTypes": [
+    { "key": "otomobil", "label": "Otomobil", "marketRegions": ["global", "turkiye", "europe", "north-america", "asia-pacific"], "supportsObd": true, "supportsCommercialListing": true, "supportsProfileShowcase": true, "manualBrandEntryAllowed": true, "manualModelEntryAllowed": true },
+    { "key": "suv", "label": "SUV", "marketRegions": ["global", "turkiye", "europe", "north-america", "asia-pacific"], "supportsObd": true, "supportsCommercialListing": true, "supportsProfileShowcase": true, "manualBrandEntryAllowed": true, "manualModelEntryAllowed": true },
+    { "key": "ticari-arac", "label": "Ticari arac", "marketRegions": ["global", "turkiye", "europe", "middle-east-africa"], "supportsObd": true, "supportsCommercialListing": true, "supportsProfileShowcase": true, "manualBrandEntryAllowed": true, "manualModelEntryAllowed": true },
+    { "key": "minibus", "label": "Minibus", "marketRegions": ["global", "turkiye", "europe", "middle-east-africa"], "supportsObd": true, "supportsCommercialListing": true, "supportsProfileShowcase": true, "manualBrandEntryAllowed": true, "manualModelEntryAllowed": true },
+    { "key": "otobus", "label": "Otobus", "marketRegions": ["global", "turkiye", "europe", "middle-east-africa"], "supportsObd": true, "supportsCommercialListing": true, "supportsProfileShowcase": true, "manualBrandEntryAllowed": true, "manualModelEntryAllowed": true },
+    { "key": "karavan", "label": "Karavan", "marketRegions": ["global", "europe", "north-america"], "supportsObd": true, "supportsCommercialListing": true, "supportsProfileShowcase": true, "manualBrandEntryAllowed": true, "manualModelEntryAllowed": true },
+    { "key": "pick-up", "label": "Pick-up", "marketRegions": ["global", "turkiye", "europe", "north-america", "asia-pacific"], "supportsObd": true, "supportsCommercialListing": true, "supportsProfileShowcase": true, "manualBrandEntryAllowed": true, "manualModelEntryAllowed": true },
+    { "key": "motosiklet", "label": "Motosiklet", "marketRegions": ["global", "turkiye", "europe", "north-america", "asia-pacific"], "supportsObd": false, "supportsCommercialListing": true, "supportsProfileShowcase": true, "manualBrandEntryAllowed": true, "manualModelEntryAllowed": true },
+    { "key": "atv", "label": "ATV", "marketRegions": ["powersports-global"], "supportsObd": false, "supportsCommercialListing": true, "supportsProfileShowcase": true, "manualBrandEntryAllowed": true, "manualModelEntryAllowed": true },
+    { "key": "utv", "label": "UTV", "marketRegions": ["powersports-global"], "supportsObd": false, "supportsCommercialListing": true, "supportsProfileShowcase": true, "manualBrandEntryAllowed": true, "manualModelEntryAllowed": true },
+    { "key": "tir", "label": "Tir", "marketRegions": ["heavy-commercial-global", "europe", "middle-east-africa"], "supportsObd": true, "supportsCommercialListing": true, "supportsProfileShowcase": true, "manualBrandEntryAllowed": true, "manualModelEntryAllowed": true },
+    { "key": "cekici", "label": "Cekici", "marketRegions": ["heavy-commercial-global", "europe", "middle-east-africa"], "supportsObd": true, "supportsCommercialListing": true, "supportsProfileShowcase": true, "manualBrandEntryAllowed": true, "manualModelEntryAllowed": true },
+    { "key": "kamyon", "label": "Kamyon", "marketRegions": ["heavy-commercial-global", "turkiye", "europe", "middle-east-africa"], "supportsObd": true, "supportsCommercialListing": true, "supportsProfileShowcase": true, "manualBrandEntryAllowed": true, "manualModelEntryAllowed": true },
+    { "key": "kamyonet", "label": "Kamyonet", "marketRegions": ["global", "turkiye", "europe"], "supportsObd": true, "supportsCommercialListing": true, "supportsProfileShowcase": true, "manualBrandEntryAllowed": true, "manualModelEntryAllowed": true },
+    { "key": "is-makinesi", "label": "Is makinesi", "marketRegions": ["industrial-global"], "supportsObd": false, "supportsCommercialListing": true, "supportsProfileShowcase": true, "manualBrandEntryAllowed": true, "manualModelEntryAllowed": true },
+    { "key": "kepce", "label": "Kepce", "marketRegions": ["industrial-global"], "supportsObd": false, "supportsCommercialListing": true, "supportsProfileShowcase": true, "manualBrandEntryAllowed": true, "manualModelEntryAllowed": true },
+    { "key": "forklift", "label": "Forklift", "marketRegions": ["industrial-global"], "supportsObd": false, "supportsCommercialListing": true, "supportsProfileShowcase": true, "manualBrandEntryAllowed": true, "manualModelEntryAllowed": true },
+    { "key": "traktor", "label": "Traktor", "marketRegions": ["agriculture-global"], "supportsObd": false, "supportsCommercialListing": true, "supportsProfileShowcase": true, "manualBrandEntryAllowed": true, "manualModelEntryAllowed": true },
+    { "key": "tekne", "label": "Tekne", "marketRegions": ["marine-global"], "supportsObd": false, "supportsCommercialListing": true, "supportsProfileShowcase": true, "manualBrandEntryAllowed": true, "manualModelEntryAllowed": true },
+    { "key": "yat", "label": "Yat", "marketRegions": ["marine-global"], "supportsObd": false, "supportsCommercialListing": true, "supportsProfileShowcase": true, "manualBrandEntryAllowed": true, "manualModelEntryAllowed": true },
+    { "key": "jet-ski", "label": "Jet ski", "marketRegions": ["marine-global"], "supportsObd": false, "supportsCommercialListing": true, "supportsProfileShowcase": true, "manualBrandEntryAllowed": true, "manualModelEntryAllowed": true },
+    { "key": "diger", "label": "Diger", "marketRegions": ["global"], "supportsObd": false, "supportsCommercialListing": true, "supportsProfileShowcase": true, "manualBrandEntryAllowed": true, "manualModelEntryAllowed": true }
+  ],
+  "brands": [
+    {
+      "slug": "toyota",
+      "name": "Toyota",
+      "typeKey": "otomobil",
+      "marketRegions": ["global", "turkiye", "europe", "north-america", "asia-pacific"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "corolla", "name": "Corolla", "bodyTypes": ["sedan", "hatchback"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true },
+        { "slug": "camry", "name": "Camry", "bodyTypes": ["sedan"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true },
+        { "slug": "yaris", "name": "Yaris", "bodyTypes": ["hatchback"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "volkswagen",
+      "name": "Volkswagen",
+      "typeKey": "otomobil",
+      "marketRegions": ["global", "turkiye", "europe", "asia-pacific"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "golf", "name": "Golf", "bodyTypes": ["hatchback", "wagon"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true },
+        { "slug": "passat", "name": "Passat", "bodyTypes": ["sedan", "wagon"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true },
+        { "slug": "polo", "name": "Polo", "bodyTypes": ["hatchback"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "bmw",
+      "name": "BMW",
+      "typeKey": "otomobil",
+      "marketRegions": ["global", "turkiye", "europe", "north-america", "asia-pacific"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "3-serisi", "name": "3 Serisi", "bodyTypes": ["sedan", "wagon"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true },
+        { "slug": "5-serisi", "name": "5 Serisi", "bodyTypes": ["sedan", "wagon"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true },
+        { "slug": "1-serisi", "name": "1 Serisi", "bodyTypes": ["hatchback"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "mercedes-benz",
+      "name": "Mercedes-Benz",
+      "typeKey": "otomobil",
+      "marketRegions": ["global", "turkiye", "europe", "north-america", "asia-pacific"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "c-serisi", "name": "C Serisi", "bodyTypes": ["sedan", "wagon", "coupe", "cabrio"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true },
+        { "slug": "e-serisi", "name": "E Serisi", "bodyTypes": ["sedan", "wagon", "coupe", "cabrio"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true },
+        { "slug": "a-serisi", "name": "A Serisi", "bodyTypes": ["hatchback", "sedan"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "audi",
+      "name": "Audi",
+      "typeKey": "otomobil",
+      "marketRegions": ["global", "turkiye", "europe", "north-america", "asia-pacific"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "a3", "name": "A3", "bodyTypes": ["sedan", "hatchback"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true },
+        { "slug": "a4", "name": "A4", "bodyTypes": ["sedan", "wagon"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true },
+        { "slug": "a6", "name": "A6", "bodyTypes": ["sedan", "wagon"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "ford",
+      "name": "Ford",
+      "typeKey": "otomobil",
+      "marketRegions": ["global", "turkiye", "europe", "north-america"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "focus", "name": "Focus", "bodyTypes": ["hatchback", "sedan", "wagon"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true },
+        { "slug": "fiesta", "name": "Fiesta", "bodyTypes": ["hatchback"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true },
+        { "slug": "mustang", "name": "Mustang", "bodyTypes": ["coupe", "cabrio"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "honda",
+      "name": "Honda",
+      "typeKey": "otomobil",
+      "marketRegions": ["global", "turkiye", "europe", "north-america", "asia-pacific"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "civic", "name": "Civic", "bodyTypes": ["sedan", "hatchback"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true },
+        { "slug": "accord", "name": "Accord", "bodyTypes": ["sedan"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true },
+        { "slug": "city", "name": "City", "bodyTypes": ["sedan"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "hyundai",
+      "name": "Hyundai",
+      "typeKey": "otomobil",
+      "marketRegions": ["global", "turkiye", "europe", "asia-pacific"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "i20", "name": "i20", "bodyTypes": ["hatchback"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true },
+        { "slug": "i30", "name": "i30", "bodyTypes": ["hatchback", "wagon", "fastback"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true },
+        { "slug": "elantra", "name": "Elantra", "bodyTypes": ["sedan"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "renault",
+      "name": "Renault",
+      "typeKey": "otomobil",
+      "marketRegions": ["global", "turkiye", "europe", "middle-east-africa"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "clio", "name": "Clio", "bodyTypes": ["hatchback"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true },
+        { "slug": "megane", "name": "Megane", "bodyTypes": ["hatchback", "sedan", "wagon"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true },
+        { "slug": "talisman", "name": "Talisman", "bodyTypes": ["sedan", "wagon"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "peugeot",
+      "name": "Peugeot",
+      "typeKey": "otomobil",
+      "marketRegions": ["global", "turkiye", "europe", "middle-east-africa"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "208", "name": "208", "bodyTypes": ["hatchback"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true },
+        { "slug": "308", "name": "308", "bodyTypes": ["hatchback", "wagon"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true },
+        { "slug": "508", "name": "508", "bodyTypes": ["sedan", "wagon"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "nissan",
+      "name": "Nissan",
+      "typeKey": "otomobil",
+      "marketRegions": ["global", "turkiye", "europe", "asia-pacific", "north-america"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "micra", "name": "Micra", "bodyTypes": ["hatchback"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true },
+        { "slug": "sentra", "name": "Sentra", "bodyTypes": ["sedan"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true },
+        { "slug": "altima", "name": "Altima", "bodyTypes": ["sedan"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "tesla",
+      "name": "Tesla",
+      "typeKey": "otomobil",
+      "marketRegions": ["global", "europe", "north-america", "asia-pacific"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "model-3", "name": "Model 3", "bodyTypes": ["sedan"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true },
+        { "slug": "model-s", "name": "Model S", "bodyTypes": ["sedan"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+
+    {
+      "slug": "toyota",
+      "name": "Toyota",
+      "typeKey": "suv",
+      "marketRegions": ["global", "turkiye", "europe", "north-america", "asia-pacific"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "rav4", "name": "RAV4", "bodyTypes": ["suv"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true },
+        { "slug": "land-cruiser", "name": "Land Cruiser", "bodyTypes": ["suv"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "land-rover",
+      "name": "Land Rover",
+      "typeKey": "suv",
+      "marketRegions": ["global", "europe", "middle-east-africa", "north-america"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "defender", "name": "Defender", "bodyTypes": ["suv"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true },
+        { "slug": "discovery", "name": "Discovery", "bodyTypes": ["suv"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true },
+        { "slug": "range-rover-sport", "name": "Range Rover Sport", "bodyTypes": ["suv"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "hyundai",
+      "name": "Hyundai",
+      "typeKey": "suv",
+      "marketRegions": ["global", "turkiye", "europe", "asia-pacific"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "tucson", "name": "Tucson", "bodyTypes": ["suv"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true },
+        { "slug": "santa-fe", "name": "Santa Fe", "bodyTypes": ["suv"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "kia",
+      "name": "Kia",
+      "typeKey": "suv",
+      "marketRegions": ["global", "turkiye", "europe", "asia-pacific"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "sportage", "name": "Sportage", "bodyTypes": ["suv"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true },
+        { "slug": "sorento", "name": "Sorento", "bodyTypes": ["suv"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "nissan",
+      "name": "Nissan",
+      "typeKey": "suv",
+      "marketRegions": ["global", "turkiye", "europe", "north-america", "asia-pacific"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "qashqai", "name": "Qashqai", "bodyTypes": ["crossover"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true },
+        { "slug": "x-trail", "name": "X-Trail", "bodyTypes": ["suv"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "jeep",
+      "name": "Jeep",
+      "typeKey": "suv",
+      "marketRegions": ["global", "north-america", "europe", "middle-east-africa"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "wrangler", "name": "Wrangler", "bodyTypes": ["suv"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true },
+        { "slug": "grand-cherokee", "name": "Grand Cherokee", "bodyTypes": ["suv"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "bmw",
+      "name": "BMW",
+      "typeKey": "suv",
+      "marketRegions": ["global", "europe", "north-america", "asia-pacific"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "x3", "name": "X3", "bodyTypes": ["suv"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true },
+        { "slug": "x5", "name": "X5", "bodyTypes": ["suv"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "mercedes-benz",
+      "name": "Mercedes-Benz",
+      "typeKey": "suv",
+      "marketRegions": ["global", "europe", "north-america", "asia-pacific"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "glc", "name": "GLC", "bodyTypes": ["suv"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true },
+        { "slug": "gle", "name": "GLE", "bodyTypes": ["suv"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+
+    {
+      "slug": "ford",
+      "name": "Ford",
+      "typeKey": "ticari-arac",
+      "marketRegions": ["global", "turkiye", "europe", "middle-east-africa"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "transit", "name": "Transit", "bodyTypes": ["van"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "mercedes-benz",
+      "name": "Mercedes-Benz",
+      "typeKey": "ticari-arac",
+      "marketRegions": ["global", "turkiye", "europe", "middle-east-africa"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "sprinter", "name": "Sprinter", "bodyTypes": ["van"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "fiat-professional",
+      "name": "Fiat Professional",
+      "typeKey": "ticari-arac",
+      "marketRegions": ["europe", "turkiye", "middle-east-africa"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "ducato", "name": "Ducato", "bodyTypes": ["van"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "iveco",
+      "name": "Iveco",
+      "typeKey": "ticari-arac",
+      "marketRegions": ["global", "europe", "middle-east-africa", "latin-america"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "daily", "name": "Daily", "bodyTypes": ["van"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "renault",
+      "name": "Renault",
+      "typeKey": "ticari-arac",
+      "marketRegions": ["global", "europe", "turkiye", "middle-east-africa"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "master", "name": "Master", "bodyTypes": ["van"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "volkswagen-commercial",
+      "name": "Volkswagen Commercial Vehicles",
+      "typeKey": "ticari-arac",
+      "marketRegions": ["europe", "turkiye", "middle-east-africa"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "crafter", "name": "Crafter", "bodyTypes": ["van"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+
+    {
+      "slug": "mercedes-benz",
+      "name": "Mercedes-Benz",
+      "typeKey": "minibus",
+      "marketRegions": ["global", "turkiye", "europe", "middle-east-africa"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "sprinter-minibus", "name": "Sprinter Minibus", "bodyTypes": ["minibus"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "ford",
+      "name": "Ford",
+      "typeKey": "minibus",
+      "marketRegions": ["global", "turkiye", "europe"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "transit-minibus", "name": "Transit Minibus", "bodyTypes": ["minibus"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "iveco",
+      "name": "Iveco",
+      "typeKey": "minibus",
+      "marketRegions": ["global", "europe", "middle-east-africa"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "daily-minibus", "name": "Daily Minibus", "bodyTypes": ["minibus"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+
+    {
+      "slug": "mercedes-benz",
+      "name": "Mercedes-Benz",
+      "typeKey": "otobus",
+      "marketRegions": ["global", "europe", "middle-east-africa"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "travego", "name": "Travego", "bodyTypes": ["bus"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "man",
+      "name": "MAN",
+      "typeKey": "otobus",
+      "marketRegions": ["global", "europe", "middle-east-africa"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "lions-coach", "name": "Lion's Coach", "bodyTypes": ["bus"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "setra",
+      "name": "Setra",
+      "typeKey": "otobus",
+      "marketRegions": ["europe", "middle-east-africa"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": []
+    },
+    {
+      "slug": "temsa",
+      "name": "Temsa",
+      "typeKey": "otobus",
+      "marketRegions": ["turkiye", "europe", "middle-east-africa"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": []
+    },
+
+    {
+      "slug": "hymer",
+      "name": "Hymer",
+      "typeKey": "karavan",
+      "marketRegions": ["europe", "global"],
+      "completeness": "brand-only",
+      "manualModelEntryAllowed": true,
+      "models": []
+    },
+    {
+      "slug": "adria",
+      "name": "Adria",
+      "typeKey": "karavan",
+      "marketRegions": ["europe", "global"],
+      "completeness": "brand-only",
+      "manualModelEntryAllowed": true,
+      "models": []
+    },
+    {
+      "slug": "burstner",
+      "name": "Burstner",
+      "typeKey": "karavan",
+      "marketRegions": ["europe", "global"],
+      "completeness": "brand-only",
+      "manualModelEntryAllowed": true,
+      "models": []
+    },
+    {
+      "slug": "knaus",
+      "name": "Knaus",
+      "typeKey": "karavan",
+      "marketRegions": ["europe", "global"],
+      "completeness": "brand-only",
+      "manualModelEntryAllowed": true,
+      "models": []
+    },
+
+    {
+      "slug": "toyota",
+      "name": "Toyota",
+      "typeKey": "pick-up",
+      "marketRegions": ["global", "turkiye", "europe", "asia-pacific", "middle-east-africa"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "hilux", "name": "Hilux", "bodyTypes": ["pickup"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "ford",
+      "name": "Ford",
+      "typeKey": "pick-up",
+      "marketRegions": ["global", "turkiye", "europe", "north-america"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "ranger", "name": "Ranger", "bodyTypes": ["pickup"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "isuzu",
+      "name": "Isuzu",
+      "typeKey": "pick-up",
+      "marketRegions": ["global", "turkiye", "asia-pacific", "middle-east-africa"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "d-max", "name": "D-Max", "bodyTypes": ["pickup"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "mitsubishi",
+      "name": "Mitsubishi",
+      "typeKey": "pick-up",
+      "marketRegions": ["global", "turkiye", "asia-pacific", "middle-east-africa"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "l200", "name": "L200", "bodyTypes": ["pickup"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "nissan",
+      "name": "Nissan",
+      "typeKey": "pick-up",
+      "marketRegions": ["global", "europe", "asia-pacific", "middle-east-africa", "north-america"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "navara", "name": "Navara", "bodyTypes": ["pickup"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+
+    {
+      "slug": "honda",
+      "name": "Honda",
+      "typeKey": "motosiklet",
+      "marketRegions": ["global", "turkiye", "europe", "north-america", "asia-pacific"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "cbr500r", "name": "CBR500R", "bodyTypes": ["sportbike"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true },
+        { "slug": "cb650r", "name": "CB650R", "bodyTypes": ["naked"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "yamaha",
+      "name": "Yamaha",
+      "typeKey": "motosiklet",
+      "marketRegions": ["global", "turkiye", "europe", "north-america", "asia-pacific"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "mt-07", "name": "MT-07", "bodyTypes": ["naked"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true },
+        { "slug": "yzf-r25", "name": "YZF-R25", "bodyTypes": ["sportbike"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "kawasaki",
+      "name": "Kawasaki",
+      "typeKey": "motosiklet",
+      "marketRegions": ["global", "turkiye", "europe", "north-america", "asia-pacific"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "ninja-650", "name": "Ninja 650", "bodyTypes": ["sportbike"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true },
+        { "slug": "z900", "name": "Z900", "bodyTypes": ["naked"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "suzuki",
+      "name": "Suzuki",
+      "typeKey": "motosiklet",
+      "marketRegions": ["global", "turkiye", "europe", "north-america", "asia-pacific"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "v-strom-650", "name": "V-Strom 650", "bodyTypes": ["adventure"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "bmw-motorrad",
+      "name": "BMW Motorrad",
+      "typeKey": "motosiklet",
+      "marketRegions": ["global", "europe", "north-america", "asia-pacific"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "r-1250-gs", "name": "R 1250 GS", "bodyTypes": ["adventure"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "ducati",
+      "name": "Ducati",
+      "typeKey": "motosiklet",
+      "marketRegions": ["global", "europe", "north-america", "asia-pacific"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "monster", "name": "Monster", "bodyTypes": ["naked"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "ktm",
+      "name": "KTM",
+      "typeKey": "motosiklet",
+      "marketRegions": ["global", "europe", "north-america", "asia-pacific"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "duke-390", "name": "Duke 390", "bodyTypes": ["naked"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+
+    {
+      "slug": "can-am",
+      "name": "Can-Am",
+      "typeKey": "atv",
+      "marketRegions": ["powersports-global"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "outlander", "name": "Outlander", "bodyTypes": ["atv"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "polaris",
+      "name": "Polaris",
+      "typeKey": "atv",
+      "marketRegions": ["powersports-global"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "sportsman", "name": "Sportsman", "bodyTypes": ["atv"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "yamaha",
+      "name": "Yamaha",
+      "typeKey": "atv",
+      "marketRegions": ["powersports-global"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "grizzly", "name": "Grizzly", "bodyTypes": ["atv"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+
+    {
+      "slug": "can-am",
+      "name": "Can-Am",
+      "typeKey": "utv",
+      "marketRegions": ["powersports-global"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "maverick", "name": "Maverick", "bodyTypes": ["utv"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "polaris",
+      "name": "Polaris",
+      "typeKey": "utv",
+      "marketRegions": ["powersports-global"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "rzr", "name": "RZR", "bodyTypes": ["utv"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "honda",
+      "name": "Honda",
+      "typeKey": "utv",
+      "marketRegions": ["powersports-global"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "pioneer", "name": "Pioneer", "bodyTypes": ["utv"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+
+    {
+      "slug": "volvo-trucks",
+      "name": "Volvo Trucks",
+      "typeKey": "tir",
+      "marketRegions": ["heavy-commercial-global", "europe", "middle-east-africa"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "fh", "name": "FH", "bodyTypes": ["tractor-unit"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "scania",
+      "name": "Scania",
+      "typeKey": "tir",
+      "marketRegions": ["heavy-commercial-global", "europe", "middle-east-africa"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "r-series", "name": "R Series", "bodyTypes": ["tractor-unit"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "mercedes-benz-trucks",
+      "name": "Mercedes-Benz Trucks",
+      "typeKey": "tir",
+      "marketRegions": ["heavy-commercial-global", "europe", "middle-east-africa"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "actros", "name": "Actros", "bodyTypes": ["tractor-unit"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "daf",
+      "name": "DAF",
+      "typeKey": "tir",
+      "marketRegions": ["heavy-commercial-global", "europe"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "xf", "name": "XF", "bodyTypes": ["tractor-unit"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "man",
+      "name": "MAN",
+      "typeKey": "tir",
+      "marketRegions": ["heavy-commercial-global", "europe", "middle-east-africa"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "tgx", "name": "TGX", "bodyTypes": ["tractor-unit"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "renault-trucks",
+      "name": "Renault Trucks",
+      "typeKey": "tir",
+      "marketRegions": ["heavy-commercial-global", "europe", "middle-east-africa"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "t", "name": "T", "bodyTypes": ["tractor-unit"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+
+    {
+      "slug": "volvo-trucks",
+      "name": "Volvo Trucks",
+      "typeKey": "cekici",
+      "marketRegions": ["heavy-commercial-global", "europe", "middle-east-africa"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "fh-tractor", "name": "FH", "bodyTypes": ["tractor-unit"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "scania",
+      "name": "Scania",
+      "typeKey": "cekici",
+      "marketRegions": ["heavy-commercial-global", "europe", "middle-east-africa"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "s-series", "name": "S Series", "bodyTypes": ["tractor-unit"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "mercedes-benz-trucks",
+      "name": "Mercedes-Benz Trucks",
+      "typeKey": "cekici",
+      "marketRegions": ["heavy-commercial-global", "europe", "middle-east-africa"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "actros-tractor", "name": "Actros", "bodyTypes": ["tractor-unit"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+
+    {
+      "slug": "mercedes-benz-trucks",
+      "name": "Mercedes-Benz Trucks",
+      "typeKey": "kamyon",
+      "marketRegions": ["heavy-commercial-global", "turkiye", "europe", "middle-east-africa"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "atego", "name": "Atego", "bodyTypes": ["truck"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "isuzu-trucks",
+      "name": "Isuzu Trucks",
+      "typeKey": "kamyon",
+      "marketRegions": ["global", "turkiye", "asia-pacific", "middle-east-africa"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "n-series", "name": "N Series", "bodyTypes": ["truck"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "man",
+      "name": "MAN",
+      "typeKey": "kamyon",
+      "marketRegions": ["heavy-commercial-global", "europe", "middle-east-africa"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "tgs", "name": "TGS", "bodyTypes": ["truck"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "volvo-trucks",
+      "name": "Volvo Trucks",
+      "typeKey": "kamyon",
+      "marketRegions": ["heavy-commercial-global", "europe", "middle-east-africa"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "fm", "name": "FM", "bodyTypes": ["truck"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+
+    {
+      "slug": "ford",
+      "name": "Ford",
+      "typeKey": "kamyonet",
+      "marketRegions": ["global", "turkiye", "europe"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "transit-custom", "name": "Transit Custom", "bodyTypes": ["van"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "fiat-professional",
+      "name": "Fiat Professional",
+      "typeKey": "kamyonet",
+      "marketRegions": ["europe", "turkiye", "middle-east-africa"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "doblo-cargo", "name": "Doblo Cargo", "bodyTypes": ["van"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "peugeot",
+      "name": "Peugeot",
+      "typeKey": "kamyonet",
+      "marketRegions": ["global", "europe", "turkiye", "middle-east-africa"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "partner-van", "name": "Partner Van", "bodyTypes": ["van"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "renault",
+      "name": "Renault",
+      "typeKey": "kamyonet",
+      "marketRegions": ["global", "europe", "turkiye", "middle-east-africa"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "kangoo-van", "name": "Kangoo Van", "bodyTypes": ["van"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+
+    {
+      "slug": "caterpillar",
+      "name": "Caterpillar",
+      "typeKey": "is-makinesi",
+      "marketRegions": ["industrial-global"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "320", "name": "320", "bodyTypes": ["excavator"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "komatsu",
+      "name": "Komatsu",
+      "typeKey": "is-makinesi",
+      "marketRegions": ["industrial-global"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "pc210", "name": "PC210", "bodyTypes": ["excavator"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "jcb",
+      "name": "JCB",
+      "typeKey": "is-makinesi",
+      "marketRegions": ["industrial-global"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "3cx", "name": "3CX", "bodyTypes": ["backhoe-loader"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "volvo-ce",
+      "name": "Volvo CE",
+      "typeKey": "is-makinesi",
+      "marketRegions": ["industrial-global"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "ec220", "name": "EC220", "bodyTypes": ["excavator"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "hitachi",
+      "name": "Hitachi",
+      "typeKey": "is-makinesi",
+      "marketRegions": ["industrial-global"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "zx200", "name": "ZX200", "bodyTypes": ["excavator"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+
+    {
+      "slug": "jcb",
+      "name": "JCB",
+      "typeKey": "kepce",
+      "marketRegions": ["industrial-global"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "3cx", "name": "3CX", "bodyTypes": ["backhoe-loader"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "caterpillar",
+      "name": "Caterpillar",
+      "typeKey": "kepce",
+      "marketRegions": ["industrial-global"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "432", "name": "432", "bodyTypes": ["backhoe-loader"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "komatsu",
+      "name": "Komatsu",
+      "typeKey": "kepce",
+      "marketRegions": ["industrial-global"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "wb97", "name": "WB97", "bodyTypes": ["backhoe-loader"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+
+    {
+      "slug": "toyota-material-handling",
+      "name": "Toyota Material Handling",
+      "typeKey": "forklift",
+      "marketRegions": ["industrial-global"],
+      "completeness": "brand-only",
+      "manualModelEntryAllowed": true,
+      "models": []
+    },
+    {
+      "slug": "linde",
+      "name": "Linde",
+      "typeKey": "forklift",
+      "marketRegions": ["industrial-global"],
+      "completeness": "brand-only",
+      "manualModelEntryAllowed": true,
+      "models": []
+    },
+    {
+      "slug": "hyster",
+      "name": "Hyster",
+      "typeKey": "forklift",
+      "marketRegions": ["industrial-global"],
+      "completeness": "brand-only",
+      "manualModelEntryAllowed": true,
+      "models": []
+    },
+    {
+      "slug": "jungheinrich",
+      "name": "Jungheinrich",
+      "typeKey": "forklift",
+      "marketRegions": ["industrial-global"],
+      "completeness": "brand-only",
+      "manualModelEntryAllowed": true,
+      "models": []
+    },
+
+    {
+      "slug": "john-deere",
+      "name": "John Deere",
+      "typeKey": "traktor",
+      "marketRegions": ["agriculture-global", "north-america", "europe"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "5e", "name": "5E", "bodyTypes": ["tractor"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "new-holland",
+      "name": "New Holland",
+      "typeKey": "traktor",
+      "marketRegions": ["agriculture-global", "europe", "middle-east-africa", "latin-america"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "t5", "name": "T5", "bodyTypes": ["tractor"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "massey-ferguson",
+      "name": "Massey Ferguson",
+      "typeKey": "traktor",
+      "marketRegions": ["agriculture-global", "europe", "middle-east-africa", "latin-america"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "5711", "name": "5711", "bodyTypes": ["tractor"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "case-ih",
+      "name": "Case IH",
+      "typeKey": "traktor",
+      "marketRegions": ["agriculture-global", "north-america", "europe"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "farmall", "name": "Farmall", "bodyTypes": ["tractor"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "fendt",
+      "name": "Fendt",
+      "typeKey": "traktor",
+      "marketRegions": ["agriculture-global", "europe"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "700-vario", "name": "700 Vario", "bodyTypes": ["tractor"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+
+    {
+      "slug": "bayliner",
+      "name": "Bayliner",
+      "typeKey": "tekne",
+      "marketRegions": ["marine-global", "europe", "north-america"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "vr5", "name": "VR5", "bodyTypes": ["boat"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "quicksilver",
+      "name": "Quicksilver",
+      "typeKey": "tekne",
+      "marketRegions": ["marine-global", "europe"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "activ-605", "name": "Activ 605", "bodyTypes": ["boat"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "jeanneau",
+      "name": "Jeanneau",
+      "typeKey": "tekne",
+      "marketRegions": ["marine-global", "europe", "north-america"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "merry-fisher-795", "name": "Merry Fisher 795", "bodyTypes": ["boat"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+
+    {
+      "slug": "azimut",
+      "name": "Azimut",
+      "typeKey": "yat",
+      "marketRegions": ["marine-global", "europe", "middle-east-africa"],
+      "completeness": "brand-only",
+      "manualModelEntryAllowed": true,
+      "models": []
+    },
+    {
+      "slug": "sunseeker",
+      "name": "Sunseeker",
+      "typeKey": "yat",
+      "marketRegions": ["marine-global", "europe", "north-america", "middle-east-africa"],
+      "completeness": "brand-only",
+      "manualModelEntryAllowed": true,
+      "models": []
+    },
+    {
+      "slug": "princess",
+      "name": "Princess",
+      "typeKey": "yat",
+      "marketRegions": ["marine-global", "europe", "middle-east-africa"],
+      "completeness": "brand-only",
+      "manualModelEntryAllowed": true,
+      "models": []
+    },
+    {
+      "slug": "ferretti",
+      "name": "Ferretti",
+      "typeKey": "yat",
+      "marketRegions": ["marine-global", "europe", "middle-east-africa"],
+      "completeness": "brand-only",
+      "manualModelEntryAllowed": true,
+      "models": []
+    },
+
+    {
+      "slug": "sea-doo",
+      "name": "Sea-Doo",
+      "typeKey": "jet-ski",
+      "marketRegions": ["marine-global"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "gtx", "name": "GTX", "bodyTypes": ["jetski"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "yamaha",
+      "name": "Yamaha",
+      "typeKey": "jet-ski",
+      "marketRegions": ["marine-global"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "waverunner", "name": "WaveRunner", "bodyTypes": ["jetski"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    },
+    {
+      "slug": "kawasaki",
+      "name": "Kawasaki",
+      "typeKey": "jet-ski",
+      "marketRegions": ["marine-global"],
+      "completeness": "partial",
+      "manualModelEntryAllowed": true,
+      "models": [
+        { "slug": "jet-ski-ultra", "name": "Jet Ski Ultra", "bodyTypes": ["jetski"], "generations": [], "completeness": "partial", "manualGenerationEntryAllowed": true, "manualSpecEntryAllowed": true }
+      ]
+    }
+  ]
+}
