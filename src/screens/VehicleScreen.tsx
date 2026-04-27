@@ -18,12 +18,23 @@ import { ObdDiscoveredDevice, VehicleProfile } from '../types';
 interface VehicleScreenProps {
   vehicle?: VehicleProfile;
   onEditVehicle: () => void;
+  onCreateListing: () => void;
   onPersistVehicleSnapshot: (vehicle: VehicleProfile) => void | Promise<void>;
+}
+
+function InfoMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.infoMetric}>
+      <Text style={styles.infoMetricValue}>{value}</Text>
+      <Text style={styles.infoMetricLabel}>{label}</Text>
+    </View>
+  );
 }
 
 export function VehicleScreen({
   vehicle,
   onEditVehicle,
+  onCreateListing,
   onPersistVehicleSnapshot,
 }: VehicleScreenProps) {
   const [modalVisible, setModalVisible] = useState(false);
@@ -47,6 +58,15 @@ export function VehicleScreen({
         : undefined,
     [sessionVehicle],
   );
+
+  const healthLabel =
+    typeof currentVehicle?.healthScore === 'number'
+      ? `%${currentVehicle.healthScore}`
+      : 'Veri yok';
+  const driveLabel =
+    typeof currentVehicle?.driveScore === 'number'
+      ? `${currentVehicle.driveScore}/100`
+      : 'Veri yok';
 
   const runScan = async () => {
     setScanning(true);
@@ -89,7 +109,7 @@ export function VehicleScreen({
     } catch (error) {
       Alert.alert(
         'OBD bağlantısı kesilemedi',
-        error instanceof Error ? error.message : 'Bağlantı kapatılamadı.',
+        error instanceof Error ? error.message : 'Bağlantı şu anda kapatılamadı.',
       );
     }
   };
@@ -129,97 +149,79 @@ export function VehicleScreen({
           <View style={styles.emptyIcon}>
             <Feather color={theme.colors.primary} name="truck" size={28} />
           </View>
-          <Text style={styles.emptyTitle}>Araç profili henüz oluşturulmadı</Text>
+          <Text style={styles.emptyTitle}>Garajın henüz boş</Text>
           <Text style={styles.emptyText}>
-            Marka, model, yıl, paket, kilometre, motor hacmi ve VIN eklediğinde araç bilgileri bu
-            sekmede görünür. OBD bağlantısı kurulmadan canlı veri gösterilmez.
+            İlk aracını eklediğinde fotoğraflar, ekspertiz özeti, canlı OBD verileri ve ilana çıkarma
+            akışı burada toplanır.
           </Text>
           <Pressable onPress={onEditVehicle} style={styles.primaryButton}>
-            <Text style={styles.primaryButtonText}>Araç ekle</Text>
+            <Text style={styles.primaryButtonText}>Garaja araç ekle</Text>
           </Pressable>
         </View>
       </ScrollView>
     );
   }
 
-  const hasRealObdData =
-    currentVehicle?.obdConnected &&
-    (currentVehicle.liveMetrics.length > 0 ||
-      currentVehicle.faultCodes.length > 0 ||
-      currentVehicle.probableFaultyParts.length > 0 ||
-      typeof currentVehicle.healthScore === 'number' ||
-      typeof currentVehicle.driveScore === 'number');
-
   return (
     <>
       <ScrollView style={styles.screen} showsVerticalScrollIndicator={false}>
         <View style={styles.hero}>
-          <Text style={styles.heroEyebrow}>Araç profili</Text>
-          <Text style={styles.heroTitle}>
-            {currentVehicle?.year} {currentVehicle?.brand} {currentVehicle?.model}
-          </Text>
-          <Text style={styles.heroSub}>
-            {currentVehicle?.packageName} • {currentVehicle?.engineVolume}
-          </Text>
-
-          <Pressable onPress={openObdModal} style={styles.obdBadge}>
-            <View
-              style={[
-                styles.obdDot,
-                {
-                  backgroundColor: currentVehicle?.obdConnected
-                    ? theme.colors.success
-                    : theme.colors.danger,
-                },
-              ]}
-            />
-            <Text style={styles.obdText}>
-              {currentVehicle?.obdConnected ? 'OBD bağlı' : 'OBD bağlı değil'}
-            </Text>
-            <Feather color={theme.colors.card} name="chevron-right" size={16} />
-          </Pressable>
-
-          {currentVehicle?.obdLastSyncAt ? (
-            <Text style={styles.syncMeta}>
-              Son gerçek veri alımı:{' '}
-              {new Date(currentVehicle.obdLastSyncAt).toLocaleString('tr-TR')}
-            </Text>
-          ) : null}
-
-          <View style={styles.scoreRow}>
-            <View style={styles.scoreCard}>
-              <Text style={styles.scoreValue}>
-                {typeof currentVehicle?.healthScore === 'number'
-                  ? `%${currentVehicle.healthScore}`
-                  : 'Veri yok'}
+          <View style={styles.heroTop}>
+            <View>
+              <Text style={styles.heroEyebrow}>GARAJIM</Text>
+              <Text style={styles.heroTitle}>
+                {currentVehicle?.year} {currentVehicle?.brand} {currentVehicle?.model}
               </Text>
-              <Text style={styles.scoreLabel}>Araç sağlığı</Text>
+              <Text style={styles.heroSubtitle}>
+                {currentVehicle?.packageName} • {currentVehicle?.engineVolume || 'Motor bilgisi bekleniyor'}
+              </Text>
             </View>
-            <View style={styles.scoreCard}>
-              <Text style={styles.scoreValue}>
-                {typeof currentVehicle?.driveScore === 'number'
-                  ? `${currentVehicle.driveScore}/100`
-                  : 'Veri yok'}
+            <View style={styles.connectionPill}>
+              <View
+                style={[
+                  styles.connectionDot,
+                  { backgroundColor: currentVehicle?.obdConnected ? theme.colors.success : theme.colors.danger },
+                ]}
+              />
+              <Text style={styles.connectionText}>
+                {currentVehicle?.obdConnected ? 'Canlı OBD bağlı' : 'OBD bağlı değil'}
               </Text>
-              <Text style={styles.scoreLabel}>Sürüş puanı</Text>
             </View>
           </View>
 
+          <View style={styles.infoMetricRow}>
+            <InfoMetric label="Sağlık" value={healthLabel} />
+            <InfoMetric label="Sürüş puanı" value={driveLabel} />
+            <InfoMetric label="Kilometre" value={currentVehicle?.mileage || '—'} />
+          </View>
+
           <View style={styles.heroActions}>
-            <Pressable onPress={onEditVehicle} style={styles.editButton}>
-              <Text style={styles.editButtonText}>Araç bilgisini düzenle</Text>
+            <Pressable onPress={onEditVehicle} style={styles.secondaryHeroButton}>
+              <Text style={styles.secondaryHeroButtonText}>Bilgileri düzenle</Text>
             </Pressable>
-            <Pressable onPress={openObdModal} style={styles.secondaryHeroButton}>
-              <Text style={styles.secondaryHeroButtonText}>OBD cihazı ara</Text>
+            <Pressable onPress={onCreateListing} style={styles.primaryHeroButton}>
+              <Text style={styles.primaryHeroButtonText}>Aracı ilana çıkar</Text>
+            </Pressable>
+          </View>
+
+          <View style={styles.heroActions}>
+            <Pressable onPress={openObdModal} style={styles.ghostHeroButton}>
+              <Text style={styles.ghostHeroButtonText}>OBD cihazı bağla</Text>
             </Pressable>
             {currentVehicle?.obdConnected ? (
-              <Pressable onPress={() => void handleRefresh()} style={styles.secondaryHeroButton}>
-                <Text style={styles.secondaryHeroButtonText}>
+              <Pressable onPress={() => void handleRefresh()} style={styles.ghostHeroButton}>
+                <Text style={styles.ghostHeroButtonText}>
                   {connecting ? 'Veri okunuyor...' : 'Canlı veriyi yenile'}
                 </Text>
               </Pressable>
             ) : null}
           </View>
+
+          {currentVehicle?.obdLastSyncAt ? (
+            <Text style={styles.syncMeta}>
+              Son senkron: {new Date(currentVehicle.obdLastSyncAt).toLocaleString('tr-TR')}
+            </Text>
+          ) : null}
         </View>
 
         {obdError ? (
@@ -229,14 +231,35 @@ export function VehicleScreen({
         ) : null}
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Carloi ekspertiz raporu</Text>
+          <Text style={styles.sectionTitle}>Araç özeti</Text>
+          <View style={styles.summaryCard}>
+            <Text style={styles.summaryTitle}>Bu araçla neler yapabilirsin?</Text>
+            <View style={styles.summaryList}>
+              <View style={styles.summaryRow}>
+                <View style={styles.summaryDot} />
+                <Text style={styles.summaryText}>Fotoğraf ve video odaklı araç gönderileri paylaş.</Text>
+              </View>
+              <View style={styles.summaryRow}>
+                <View style={styles.summaryDot} />
+                <Text style={styles.summaryText}>Araç bilgilerini otomatik doldurarak hızlı ilan aç.</Text>
+              </View>
+              <View style={styles.summaryRow}>
+                <View style={styles.summaryDot} />
+                <Text style={styles.summaryText}>OBD bağlıysa canlı sağlık ve arıza metriklerini takip et.</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Carloi ekspertiz kartı</Text>
           <View style={styles.reportWrap}>
             <ExpertizReportCard vehicle={currentVehicle} />
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Fabrika donanımı</Text>
+          <Text style={styles.sectionTitle}>Donanım ve notlar</Text>
           {currentVehicle?.equipment.length ? (
             <View style={styles.equipmentWrap}>
               {currentVehicle.equipment.map((item) => (
@@ -246,10 +269,10 @@ export function VehicleScreen({
               ))}
             </View>
           ) : (
-            <Text style={styles.bodyText}>Bu araç için doğrulanmış donanım bilgisi yok.</Text>
+            <Text style={styles.bodyText}>Bu araç için doğrulanmış donanım bilgisi henüz eklenmedi.</Text>
           )}
           {currentVehicle?.extraEquipment ? (
-            <Text style={styles.bodyText}>Ek donanım: {currentVehicle.extraEquipment}</Text>
+            <Text style={styles.bodyText}>Ek not: {currentVehicle.extraEquipment}</Text>
           ) : null}
         </View>
 
@@ -267,14 +290,14 @@ export function VehicleScreen({
             </View>
           ) : (
             <Text style={styles.bodyText}>
-              OBD bağlantısı kurulmadığı için gerçek canlı veri yok. Sıcaklık, trim, akü gerilimi
-              ve benzeri değerler yalnızca bağlantı olduğunda gösterilir.
+              OBD bağlantısı kurulmadığında bu alan boş kalır. Sıcaklık, akü, trim ve benzeri gerçek
+              veriler bağlantı sonrasında görünür.
             </Text>
           )}
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Aktif arıza kodları</Text>
+          <Text style={styles.sectionTitle}>Arıza ve risk görünümü</Text>
           {currentVehicle?.faultCodes.length ? (
             <View style={styles.listStack}>
               {currentVehicle.faultCodes.map((fault) => (
@@ -288,56 +311,27 @@ export function VehicleScreen({
                 </View>
               ))}
             </View>
-          ) : (
-            <Text style={styles.bodyText}>
-              Gerçek OBD taraması yapılmadığı için aktif DTC kodu gösterilmiyor.
-            </Text>
-          )}
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Muhtemel arızalı parçalar</Text>
-          {currentVehicle?.probableFaultyParts.length ? (
+          ) : currentVehicle?.upcomingRisks.length ? (
             <View style={styles.listStack}>
-              {currentVehicle.probableFaultyParts.map((part) => (
-                <View key={part.name} style={styles.listCard}>
+              {currentVehicle.upcomingRisks.map((risk) => (
+                <View key={risk.name} style={styles.listCard}>
                   <View style={styles.listCardHeader}>
-                    <Text style={styles.listCardTitle}>{part.name}</Text>
-                    <Text style={styles.listCardAccent}>%{part.probability}</Text>
+                    <Text style={styles.listCardTitle}>{risk.name}</Text>
+                    <Text style={styles.listCardAccent}>%{risk.probability}</Text>
                   </View>
-                  <Text style={styles.listCardText}>Parça: {part.marketPrice}</Text>
-                  <Text style={styles.listCardText}>Tamir ort.: {part.repairCost}</Text>
-                  <Text style={styles.listCardText}>{part.explanation}</Text>
+                  <Text style={styles.listCardText}>{risk.explanation}</Text>
                 </View>
               ))}
             </View>
           ) : (
             <Text style={styles.bodyText}>
-              OBD verisi olmadan parça arıza tahmini yapılmaz. Aşağıdaki uyarılar yalnızca yaş ve
-              kilometreye göre hazırlanır.
+              Henüz aktif arıza kodu veya öne çıkan bakım riski görünmüyor.
             </Text>
           )}
         </View>
-
-        {!hasRealObdData && currentVehicle?.upcomingRisks.length ? (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Yaş ve kilometre bazlı uyarılar</Text>
-            <View style={styles.listStack}>
-              {currentVehicle.upcomingRisks.map((part) => (
-                <View key={part.name} style={styles.listCard}>
-                  <View style={styles.listCardHeader}>
-                    <Text style={styles.listCardTitle}>{part.name}</Text>
-                    <Text style={styles.listCardAccent}>%{part.probability}</Text>
-                  </View>
-                  <Text style={styles.listCardText}>{part.explanation}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        ) : null}
 
         <View style={[styles.section, styles.summarySection]}>
-          <Text style={styles.sectionTitle}>Genel sağlık özeti</Text>
+          <Text style={styles.sectionTitle}>Önerilen aksiyonlar</Text>
           <Text style={styles.bodyText}>{currentVehicle?.summary}</Text>
           <View style={styles.actionList}>
             {(currentVehicle?.actions ?? []).map((action) => (
@@ -422,26 +416,33 @@ const styles = StyleSheet.create({
   hero: {
     margin: theme.spacing.md,
     borderRadius: 30,
-    backgroundColor: theme.colors.accent,
+    backgroundColor: theme.colors.card,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
     padding: theme.spacing.lg,
     gap: theme.spacing.md,
+    ...theme.shadow,
+  },
+  heroTop: {
+    gap: theme.spacing.sm,
   },
   heroEyebrow: {
-    color: '#9DDCD4',
+    color: theme.colors.primary,
     fontSize: 12,
     fontWeight: '800',
-    letterSpacing: 0.6,
+    letterSpacing: 1.1,
   },
   heroTitle: {
-    color: theme.colors.card,
+    color: theme.colors.text,
     fontSize: 28,
     fontWeight: '800',
     lineHeight: 34,
   },
-  heroSub: {
-    color: '#DDEAF5',
+  heroSubtitle: {
+    color: theme.colors.textSoft,
+    lineHeight: 20,
   },
-  obdBadge: {
+  connectionPill: {
     alignSelf: 'flex-start',
     flexDirection: 'row',
     alignItems: 'center',
@@ -449,67 +450,90 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.sm,
     paddingVertical: 8,
     borderRadius: theme.radius.pill,
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: theme.colors.primarySoft,
   },
-  obdDot: {
+  connectionDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
   },
-  obdText: {
-    color: theme.colors.card,
-    fontWeight: '700',
+  connectionText: {
+    color: theme.colors.primary,
     fontSize: 12,
+    fontWeight: '800',
   },
-  syncMeta: {
-    color: '#DDEAF5',
-    fontSize: 12,
-    lineHeight: 18,
-  },
-  scoreRow: {
+  infoMetricRow: {
     flexDirection: 'row',
     gap: theme.spacing.sm,
   },
-  scoreCard: {
+  infoMetric: {
     flex: 1,
-    borderRadius: 22,
+    borderRadius: 18,
+    backgroundColor: theme.colors.surfaceMuted,
     padding: theme.spacing.md,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    gap: 6,
+    gap: 4,
   },
-  scoreValue: {
-    color: theme.colors.card,
+  infoMetricValue: {
+    color: theme.colors.text,
+    fontSize: 18,
     fontWeight: '800',
-    fontSize: 22,
   },
-  scoreLabel: {
-    color: '#DDEAF5',
-    fontSize: 13,
+  infoMetricLabel: {
+    color: theme.colors.textSoft,
+    fontSize: 12,
+    fontWeight: '700',
   },
   heroActions: {
+    flexDirection: 'row',
     gap: theme.spacing.sm,
+    flexWrap: 'wrap',
   },
-  editButton: {
-    minHeight: 44,
+  primaryHeroButton: {
+    flex: 1,
+    minWidth: 160,
+    minHeight: 46,
     borderRadius: theme.radius.pill,
-    backgroundColor: theme.colors.card,
+    backgroundColor: theme.colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: theme.spacing.md,
   },
-  editButtonText: {
-    color: theme.colors.accent,
+  primaryHeroButtonText: {
+    color: theme.colors.card,
     fontWeight: '800',
   },
   secondaryHeroButton: {
-    minHeight: 44,
+    flex: 1,
+    minWidth: 140,
+    minHeight: 46,
     borderRadius: theme.radius.pill,
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: theme.colors.text,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: theme.spacing.md,
   },
   secondaryHeroButtonText: {
     color: theme.colors.card,
     fontWeight: '800',
+  },
+  ghostHeroButton: {
+    flex: 1,
+    minWidth: 140,
+    minHeight: 44,
+    borderRadius: theme.radius.pill,
+    backgroundColor: theme.colors.surfaceMuted,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: theme.spacing.md,
+  },
+  ghostHeroButtonText: {
+    color: theme.colors.text,
+    fontWeight: '700',
+  },
+  syncMeta: {
+    color: theme.colors.textSoft,
+    fontSize: 12,
+    lineHeight: 18,
   },
   inlineErrorCard: {
     marginHorizontal: theme.spacing.md,
@@ -536,6 +560,36 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
     fontSize: 20,
     fontWeight: '800',
+  },
+  summaryCard: {
+    borderRadius: 18,
+    backgroundColor: theme.colors.surfaceMuted,
+    padding: theme.spacing.md,
+    gap: theme.spacing.sm,
+  },
+  summaryTitle: {
+    color: theme.colors.text,
+    fontWeight: '800',
+  },
+  summaryList: {
+    gap: theme.spacing.sm,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: theme.spacing.sm,
+  },
+  summaryDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginTop: 7,
+    backgroundColor: theme.colors.primary,
+  },
+  summaryText: {
+    flex: 1,
+    color: theme.colors.text,
+    lineHeight: 20,
   },
   reportWrap: {
     overflow: 'hidden',

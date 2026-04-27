@@ -2,7 +2,7 @@ const FEATURE_FLAGS = {
   enableCommercialOnboarding: {
     key: 'enableCommercialOnboarding',
     env: 'FEATURE_ENABLE_COMMERCIAL_ONBOARDING',
-    defaultValue: false,
+    defaultValue: true,
     phase: 1,
     description: 'Ticari hesap yukselme ve basvuru akislarini gorunur yapar.',
   },

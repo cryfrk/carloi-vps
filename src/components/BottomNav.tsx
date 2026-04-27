@@ -34,10 +34,12 @@ export function BottomNav({ language, activeTab, onChange }: BottomNavProps) {
                 <Feather
                   color={active ? theme.colors.primary : theme.colors.textSoft}
                   name={tab.icon}
-                  size={18}
+                  size={19}
                 />
               </View>
-              <Text style={[styles.label, active && styles.activeLabel]}>{locale.tabs[tab.key]}</Text>
+              <Text numberOfLines={1} style={[styles.label, active && styles.activeLabel]}>
+                {locale.tabs[tab.key]}
+              </Text>
             </Pressable>
           );
         })}
@@ -55,24 +57,24 @@ const styles = StyleSheet.create({
   },
   wrapper: {
     flexDirection: 'row',
-    borderRadius: 24,
+    borderRadius: 26,
     backgroundColor: theme.colors.card,
     borderWidth: 1,
     borderColor: theme.colors.border,
-    paddingVertical: 4,
+    paddingVertical: 6,
     ...theme.shadow,
   },
   tab: {
     flex: 1,
-    minHeight: 58,
+    minHeight: 60,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
+    gap: 5,
   },
   iconWrap: {
-    width: 40,
-    height: 28,
-    borderRadius: 14,
+    width: 42,
+    height: 30,
+    borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -72,14 +72,6 @@ function MediaSlide({
     return (
       <Pressable onPress={() => onOpen?.(media, post)} style={styles.slidePress}>
         <VideoPreview height={height} uri={media.uri} />
-        <View style={styles.captionOverlay}>
-          <Text numberOfLines={1} style={styles.captionTitle}>
-            {media.label}
-          </Text>
-          <Text numberOfLines={1} style={styles.captionHint}>
-            Videoyu tam ekranda açmak için dokun.
-          </Text>
-        </View>
       </Pressable>
     );
   }
@@ -88,14 +80,6 @@ function MediaSlide({
     return (
       <Pressable onPress={() => onOpen?.(media, post)} style={styles.slidePress}>
         <Image resizeMode="cover" source={source} style={[styles.visual, { height }]} />
-        <View style={styles.captionOverlay}>
-          <Text numberOfLines={1} style={styles.captionTitle}>
-            {media.label}
-          </Text>
-          <Text numberOfLines={1} style={styles.captionHint}>
-            {media.hint}
-          </Text>
-        </View>
       </Pressable>
     );
   }
@@ -238,25 +222,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(5, 9, 12, 0.58)',
-  },
-  captionOverlay: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    gap: 2,
-    backgroundColor: 'rgba(5, 9, 12, 0.56)',
-  },
-  captionTitle: {
-    color: theme.colors.card,
-    fontSize: 13,
-    fontWeight: '800',
-  },
-  captionHint: {
-    color: '#D6E3EA',
-    fontSize: 12,
   },
   placeholder: {
     borderRadius: 22,

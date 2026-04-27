@@ -18,7 +18,12 @@ export function TopBar({ language, activeTab, onSearchPress, onComposePress }: T
   return (
     <View style={styles.wrapper}>
       <View style={styles.titleWrap}>
-        <Text style={styles.brand}>CARLOI</Text>
+        <View style={styles.brandRow}>
+          <Text style={styles.brand}>CARLOI</Text>
+          <View style={styles.liveBadge}>
+            <Text style={styles.liveBadgeText}>LIVE</Text>
+          </View>
+        </View>
         <Text style={styles.section}>{locale.tabs[activeTab]}</Text>
       </View>
 
@@ -36,9 +41,9 @@ export function TopBar({ language, activeTab, onSearchPress, onComposePress }: T
 
 const styles = StyleSheet.create({
   wrapper: {
-    minHeight: 56,
+    minHeight: 64,
     paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.xs,
+    paddingVertical: theme.spacing.sm,
     backgroundColor: theme.colors.card,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
@@ -47,13 +52,31 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   titleWrap: {
-    gap: 1,
+    gap: 4,
+    flexShrink: 1,
+  },
+  brandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   brand: {
     color: theme.colors.primary,
-    fontWeight: '800',
+    fontWeight: '900',
     letterSpacing: 1.4,
     fontSize: 11,
+  },
+  liveBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: theme.radius.pill,
+    backgroundColor: theme.colors.primarySoft,
+  },
+  liveBadgeText: {
+    color: theme.colors.primary,
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.8,
   },
   section: {
     color: theme.colors.text,
@@ -66,9 +89,9 @@ const styles = StyleSheet.create({
     gap: theme.spacing.xs,
   },
   iconButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: theme.colors.surfaceMuted,

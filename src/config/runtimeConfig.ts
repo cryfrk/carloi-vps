@@ -18,7 +18,7 @@ const apiBaseUrl =
     default: baseUrls.default,
   }) ?? baseUrls.default;
 
-const shareBaseUrl = process.env.EXPO_PUBLIC_SHARE_BASE_URL?.trim() || 'https://carloi.com';
+const shareBaseUrl = process.env.EXPO_PUBLIC_SHARE_BASE_URL?.trim() || 'https://www.carloi.com';
 const androidPackageName = process.env.EXPO_PUBLIC_ANDROID_PACKAGE_NAME?.trim() || 'com.carloi.mobile';
 const googleAndroidClientId = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID?.trim() || '';
 const googleIosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID?.trim() || '';

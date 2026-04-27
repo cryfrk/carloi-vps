@@ -234,6 +234,11 @@ export function PostCard({
             <Text style={styles.meta}>•</Text>
             <Text style={styles.meta}>{timeLabel}</Text>
           </View>
+          {post.role ? (
+            <View style={styles.rolePill}>
+              <Text style={styles.rolePillText}>{post.role}</Text>
+            </View>
+          ) : null}
 
           {showMediaFirst ? <PostMedia onOpenMedia={onOpenMedia} post={post} /> : null}
 
@@ -351,12 +356,14 @@ export function PostCard({
 
 const styles = StyleSheet.create({
   card: {
-    marginHorizontal: theme.spacing.md,
+    marginHorizontal: theme.spacing.sm,
     marginBottom: theme.spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
     backgroundColor: theme.colors.card,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: 24,
     padding: theme.spacing.md,
+    ...theme.shadow,
   },
   repostMeta: {
     flexDirection: 'row',
@@ -414,16 +421,29 @@ const styles = StyleSheet.create({
   author: {
     color: theme.colors.text,
     fontWeight: '800',
-    fontSize: 15,
+    fontSize: 14,
   },
   meta: {
     color: theme.colors.textSoft,
     fontSize: 12,
     fontWeight: '600',
   },
+  rolePill: {
+    alignSelf: 'flex-start',
+    marginTop: -4,
+    borderRadius: theme.radius.pill,
+    backgroundColor: theme.colors.primarySoft,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: 6,
+  },
+  rolePillText: {
+    color: theme.colors.primary,
+    fontSize: 11,
+    fontWeight: '800',
+  },
   content: {
     color: theme.colors.text,
-    lineHeight: 21,
+    lineHeight: 20,
   },
   tags: {
     color: theme.colors.primary,
@@ -475,7 +495,7 @@ const styles = StyleSheet.create({
   },
   listingPrice: {
     color: theme.colors.text,
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '800',
   },
   listingTitle: {
@@ -575,13 +595,16 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing.md,
+    justifyContent: 'space-between',
+    gap: theme.spacing.sm,
     paddingTop: 2,
   },
   actionItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    minHeight: 34,
+    paddingHorizontal: 6,
   },
   actionText: {
     color: theme.colors.textSoft,

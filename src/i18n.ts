@@ -6,7 +6,7 @@ const locales = {
       home: 'Akış',
       messages: 'Mesajlar',
       ai: 'Loi AI',
-      vehicle: 'Aracım',
+      vehicle: 'Garajım',
       profile: 'Profil',
     } satisfies Record<TabKey, string>,
     auth: {
@@ -190,7 +190,7 @@ const locales = {
       home: 'Feed',
       messages: 'Messages',
       ai: 'Loi AI',
-      vehicle: 'My Car',
+      vehicle: 'Garage',
       profile: 'Profile',
     } satisfies Record<TabKey, string>,
     auth: {

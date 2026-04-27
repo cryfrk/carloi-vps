@@ -1,4 +1,5 @@
 ﻿import { runtimeConfig } from '../config/runtimeConfig';
+import { Platform } from 'react-native';
 import {
   AppSnapshot,
   AuthLoginPayload,
@@ -30,7 +31,13 @@ interface PlatformResponse {
   expiresAt?: string;
   maskedDestination?: string;
   email?: string;
+  phone?: string;
+  verificationChannel?: 'email' | 'phone';
   deliveryFailed?: boolean;
+  emailDisabled?: boolean;
+  emailNotConfigured?: boolean;
+  smsDisabled?: boolean;
+  smsNotConfigured?: boolean;
   payment?: ExternalPaymentSession;
   data?: unknown;
   membership?: {
@@ -52,6 +59,7 @@ interface UploadableMedia {
 }
 
 const REQUEST_TIMEOUT_MS = 30000;
+const UPLOAD_TIMEOUT_MS = 45000;
 
 function getTimeoutMessage(path: string) {
   if (path.includes('/api/auth/register')) {
@@ -299,7 +307,7 @@ export const platformApi = {
             : 'jpg');
     const fileName = file.fileName || `${file.kind}-${Date.now()}.${extension}`;
 
-    if (typeof window !== 'undefined') {
+    if (Platform.OS === 'web') {
       const blob = await fetch(file.uri).then((response) => response.blob());
       formData.append('file', blob, fileName);
     } else {
@@ -320,15 +328,37 @@ export const platformApi = {
 
     formData.append('kind', file.kind);
 
-    const response = await fetch(`${runtimeConfig.apiBaseUrl}/api/media/upload`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), UPLOAD_TIMEOUT_MS);
 
-    const data = (await response.json()) as PlatformResponse;
+    let response: Response;
+    try {
+      response = await fetch(`${runtimeConfig.apiBaseUrl}/api/media/upload`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+        signal: controller.signal,
+      });
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error(
+          'Medya yukleme suresi asildi. Baglantinizi kontrol edip tekrar deneyin.',
+        );
+      }
+
+      throw new Error(
+        'Medya yuklenemedi. Baglantinizi kontrol edin veya daha kucuk bir dosya ile tekrar deneyin.',
+      );
+    } finally {
+      clearTimeout(timeout);
+    }
+
+    const data = (await response.json().catch(() => ({
+      success: false,
+      message: 'Sunucudan gecerli bir medya yaniti alinamadi.',
+    }))) as PlatformResponse;
     if (!response.ok || !data.success || !data.url) {
       throw new Error(data.message || 'Medya yüklenemedi.');
     }

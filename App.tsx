@@ -1,4 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
+import { useFonts } from 'expo-font';
+import { Feather } from '@expo/vector-icons';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -12,12 +14,14 @@ import {
   SafeAreaView,
   ScrollView,
   Share,
+  StatusBar as NativeStatusBar,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 
 import { BottomNav } from './src/components/BottomNav';
+import { CommercialActivationModal } from './src/components/CommercialActivationModal';
 import { CommentsModal } from './src/components/CommentsModal';
 import { CreatePostModal } from './src/components/CreatePostModal';
 import { ListingDetailModal } from './src/components/ListingDetailModal';
@@ -35,6 +39,7 @@ import { MessagesScreen } from './src/screens/MessagesScreen';
 import { ProfileScreen } from './src/screens/ProfileScreen';
 import { VehicleScreen } from './src/screens/VehicleScreen';
 import { premiumPlanDefinitions } from './src/config/premiumProducts';
+import { runtimeConfig } from './src/config/runtimeConfig';
 import { getCurrentResolvedLocation } from './src/services/location';
 import { pickCoverPhoto, pickSingleProfilePhoto } from './src/services/mediaPicker';
 import { platformApi } from './src/services/platformApi';
@@ -92,6 +97,7 @@ function AppShell() {
   const [isAIResponding, setIsAIResponding] = useState(false);
   const [searchVisible, setSearchVisible] = useState(false);
   const [composerVisible, setComposerVisible] = useState(false);
+  const [composerDefaultMode, setComposerDefaultMode] = useState<'standard' | 'listing'>('standard');
   const [onboardingVisible, setOnboardingVisible] = useState(false);
   const [onboardingMode, setOnboardingMode] = useState<'register' | 'edit'>('edit');
   const [commentPostId, setCommentPostId] = useState<string | null>(null);
@@ -101,6 +107,7 @@ function AppShell() {
   const [statsPostId, setStatsPostId] = useState<string | null>(null);
   const [viewedProfileHandle, setViewedProfileHandle] = useState<string | null>(null);
   const [pendingSecurePayment, setPendingSecurePayment] = useState<ExternalPaymentSession | null>(null);
+  const [commercialPromptDismissed, setCommercialPromptDismissed] = useState(false);
   const [minimumBrandDelayDone, setMinimumBrandDelayDone] = useState(false);
   const [premiumProducts, setPremiumProducts] = useState<PremiumStoreProduct[]>([]);
   const [premiumLoading, setPremiumLoading] = useState(false);
@@ -130,6 +137,7 @@ function AppShell() {
     setProfileSegment,
     shareListingRegistration,
     snapshot,
+    startVerification,
     startSaleProcess,
     toggleFollow,
     toggleLike,
@@ -213,6 +221,17 @@ function AppShell() {
   const isFollowingViewedProfile = Boolean(
     activePublicUser && profile.followingHandles.includes(activePublicUser.handle),
   );
+  const shouldShowCommercialPrompt =
+    auth.isAuthenticated &&
+    snapshot.commercial.accountType === 'commercial' &&
+    snapshot.commercial.commercialStatus === 'not_applied' &&
+    !commercialPromptDismissed;
+
+  useEffect(() => {
+    if (!auth.isAuthenticated) {
+      setCommercialPromptDismissed(false);
+    }
+  }, [auth.isAuthenticated]);
 
   useEffect(() => {
     const timer = setTimeout(() => setMinimumBrandDelayDone(true), 900);
@@ -396,6 +415,32 @@ function AppShell() {
   const handleOpenConversation = (conversationId: string) => {
     markConversationRead(conversationId);
     setSelectedConversationId(conversationId);
+  };
+
+  const openStandardComposer = () => {
+    setEditingPostId(null);
+    setComposerDefaultMode('standard');
+    setComposerVisible(true);
+  };
+
+  const openListingComposer = () => {
+    setEditingPostId(null);
+    setComposerDefaultMode('listing');
+    setComposerVisible(true);
+  };
+
+  const openCommercialOnboarding = async () => {
+    setCommercialPromptDismissed(true);
+
+    try {
+      const baseUrl = runtimeConfig.shareBaseUrl.replace(/\/$/, '');
+      await Linking.openURL(`${baseUrl}/settings/commercial`);
+    } catch {
+      Alert.alert(
+        'Ticari başvuru ekranı açılamadı',
+        'Lütfen daha sonra Ayarlar > Ticari Hesap alanından tekrar deneyin.',
+      );
+    }
   };
 
   const handleStartConversation = async (user: SearchResultUser) => {
@@ -903,13 +948,11 @@ function AppShell() {
           <HomeScreen
             onCallListing={handleCallListing}
             onCommentPress={(post) => setCommentPostId(post.id)}
-            onComposePress={() => {
-              setEditingPostId(null);
-              setComposerVisible(true);
-            }}
+            onComposePress={openStandardComposer}
             onDeletePost={handleDeletePost}
             onEditPost={(post) => {
               setEditingPostId(post.id);
+              setComposerDefaultMode(post.type);
               setComposerVisible(true);
             }}
             onMessageAuthor={handleMessageAuthor}
@@ -918,6 +961,7 @@ function AppShell() {
             onOpenProfile={handleOpenProfile}
             onOpenStats={(post) => setStatsPostId(post.id)}
             onSharePost={handleSharePost}
+            onStartListingPress={openListingComposer}
             onToggleLike={toggleLike}
             onToggleListingSold={handleToggleListingSold}
             onToggleRepost={toggleRepost}
@@ -982,6 +1026,7 @@ function AppShell() {
       case 'vehicle':
         return (
           <VehicleScreen
+            onCreateListing={openListingComposer}
             onEditVehicle={openVehicleEditor}
             onPersistVehicleSnapshot={handlePersistVehicleSnapshot}
             vehicle={vehicle}
@@ -998,13 +1043,11 @@ function AppShell() {
             onChangePhoto={handleChangeProfilePhoto}
             onChangeSegment={setProfileSegment}
             onCommentPress={(post) => setCommentPostId(post.id)}
-            onComposePress={() => {
-              setEditingPostId(null);
-              setComposerVisible(true);
-            }}
+            onComposePress={openStandardComposer}
             onDeletePost={handleDeletePost}
             onEditPost={(post) => {
               setEditingPostId(post.id);
+              setComposerDefaultMode(post.type);
               setComposerVisible(true);
             }}
             onMessageAuthor={handleMessageAuthor}
@@ -1049,6 +1092,7 @@ function AppShell() {
           onLogin={loginAccount}
           onQuickLogin={quickLoginAccount}
           onRegister={registerAccount}
+          onStartVerification={startVerification}
           onResendCode={resendEmailCode}
           onVerifyEmail={verifyEmailCode}
           quickLoginAvailable={quickLoginAvailable}
@@ -1118,6 +1162,7 @@ function AppShell() {
 
       <CreatePostModal
         autoLocationEnabled={settings.useDeviceLocation}
+        defaultMode={composerDefaultMode}
         editingPost={editingPost}
         hasVehicle={Boolean(vehicle)}
         onClose={() => {
@@ -1139,6 +1184,14 @@ function AppShell() {
         settings={settings}
         vehicle={vehicle}
         visible={composerVisible}
+      />
+
+      <CommercialActivationModal
+        onClose={() => setCommercialPromptDismissed(true)}
+        onStart={() => {
+          void openCommercialOnboarding();
+        }}
+        visible={shouldShowCommercialPrompt}
       />
 
       <OnboardingModal
@@ -1229,6 +1282,12 @@ function AppShell() {
 }
 
 export default function App() {
+  const [iconFontsLoaded] = useFonts(Feather.font);
+
+  if (!iconFontsLoaded) {
+    return <BrandBootScreen />;
+  }
+
   return (
     <AppStoreProvider>
       <AppShell />
@@ -1240,6 +1299,7 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: theme.colors.background,
+    paddingTop: Platform.OS === 'android' ? NativeStatusBar.currentHeight ?? 0 : 0,
   },
   container: {
     flex: 1,

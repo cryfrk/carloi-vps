@@ -672,7 +672,12 @@ export interface AuthRegisterPayload {
   handle: string;
   bio: string;
   email: string;
+  phone?: string;
   password: string;
+  primaryChannel?: AuthVerificationChannel;
+  signupVerification?: {
+    code: string;
+  };
   accountType?: AccountType;
   commercialProfile?: {
     companyName?: string;
@@ -712,11 +717,15 @@ export interface AuthActionResult {
   success: boolean;
   message?: string;
   email?: string;
+  phone?: string;
   expiresAt?: string;
   maskedDestination?: string;
+  verificationChannel?: AuthVerificationChannel;
   deliveryFailed?: boolean;
   emailDisabled?: boolean;
   emailNotConfigured?: boolean;
+  smsDisabled?: boolean;
+  smsNotConfigured?: boolean;
   requiresVerification?: boolean;
 }
 

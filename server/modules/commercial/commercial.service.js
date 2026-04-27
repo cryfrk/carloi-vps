@@ -714,7 +714,8 @@ async function resubmitCommercialOnboarding(userId, payload, auditContext) {
 
 async function listPendingCommercialReviews(status = 'pending_review') {
   requireCommercialOnboardingEnabled();
-  return listCommercialProfilesByStatus(status || 'pending_review');
+  const normalizedStatus = typeof status === 'string' ? status.trim() : '';
+  return listCommercialProfilesByStatus(normalizedStatus || null);
 }
 
 async function getCommercialReviewProfileDetail(profileId) {

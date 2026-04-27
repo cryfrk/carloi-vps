@@ -9,7 +9,7 @@ function readBoolean(value?: string, fallback = false) {
 export const appFeatureFlags = {
   enableCommercialOnboarding: readBoolean(
     process.env.EXPO_PUBLIC_FEATURE_ENABLE_COMMERCIAL_ONBOARDING,
-    false,
+    true,
   ),
   enableListingComplianceStep: true,
   enableSafePaymentGuidance: true,

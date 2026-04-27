@@ -697,6 +697,11 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
             verificationId: response.verificationId,
             expiresAt: response.expiresAt,
             maskedDestination: response.maskedDestination,
+            verificationChannel: response.verificationChannel,
+            emailDisabled: response.emailDisabled,
+            emailNotConfigured: response.emailNotConfigured,
+            smsDisabled: response.smsDisabled,
+            smsNotConfigured: response.smsNotConfigured,
           };
         } catch (error) {
           return {
@@ -710,18 +715,34 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         const handle = payload.handle.trim();
         const password = payload.password.trim();
         const email = payload.email.trim();
+        const phone = payload.phone?.trim() || '';
+        const primaryChannel = payload.primaryChannel === 'phone' ? 'phone' : 'email';
 
-        if (!name || !handle || !email || !password) {
+        if (!name || !handle || !password || (!email && !phone)) {
           return {
             success: false,
-            message: 'Ad, kullanıcı adı, e-posta ve şifre zorunludur.',
+            message: 'Ad, kullanici adi, sifre ve en az bir iletisim alani zorunludur.',
+          };
+        }
+
+        if (primaryChannel === 'email' && !email) {
+          return {
+            success: false,
+            message: 'E-posta ile kayit icin gecerli bir e-posta adresi gereklidir.',
+          };
+        }
+
+        if (primaryChannel === 'phone' && !phone) {
+          return {
+            success: false,
+            message: 'Telefon ile kayit icin gecerli bir telefon numarasi gereklidir.',
           };
         }
 
         if (password.length < 8) {
           return {
             success: false,
-            message: 'Şifre en az 8 karakter olmalıdır.',
+            message: 'Sifre en az 8 karakter olmalidir.',
           };
         }
 
@@ -731,22 +752,33 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
             name,
             handle,
             email,
+            phone,
             password,
             bio: payload.bio.trim(),
           });
 
+          if (response.snapshot) {
+            replaceSnapshot(response.snapshot);
+          }
+
           return {
             success: true,
-            message: response.message || 'Üyelik oluşturuldu.',
+            message: response.message || 'Uyelik olusturuldu.',
             email: response.email,
+            phone: response.phone,
             expiresAt: response.expiresAt,
             maskedDestination: response.maskedDestination,
+            verificationChannel: response.verificationChannel,
             deliveryFailed: response.deliveryFailed,
+            emailDisabled: response.emailDisabled,
+            emailNotConfigured: response.emailNotConfigured,
+            smsDisabled: response.smsDisabled,
+            smsNotConfigured: response.smsNotConfigured,
           };
         } catch (error) {
           return {
             success: false,
-            message: error instanceof Error ? error.message : 'Üyelik oluşturulamadı.',
+            message: error instanceof Error ? error.message : 'Uyelik olusturulamadi.',
           };
         }
       },
@@ -794,6 +826,8 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
             email: response.email,
             expiresAt: response.expiresAt,
             maskedDestination: response.maskedDestination,
+            emailDisabled: response.emailDisabled,
+            emailNotConfigured: response.emailNotConfigured,
           };
         } catch (error) {
           return {

@@ -1,4 +1,4 @@
-﻿import { Feather } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { PostCard } from '../components/PostCard';
@@ -11,6 +11,7 @@ interface HomeScreenProps {
   users: SearchResultUser[];
   vehicle?: VehicleProfile;
   onComposePress: () => void;
+  onStartListingPress: () => void;
   onVehiclePress: () => void;
   onCommentPress: (post: Post) => void;
   onToggleLike: (postId: string) => void;
@@ -34,6 +35,7 @@ export function HomeScreen({
   users,
   vehicle,
   onComposePress,
+  onStartListingPress,
   onVehiclePress,
   onCommentPress,
   onToggleLike,
@@ -52,6 +54,30 @@ export function HomeScreen({
 }: HomeScreenProps) {
   return (
     <ScrollView style={styles.screen} showsVerticalScrollIndicator={false}>
+      <View style={styles.hero}>
+        <View style={styles.heroCopy}>
+          <Text style={styles.heroEyebrow}>ANA AKIS</Text>
+          <Text style={styles.heroTitle}>Otomotiv timeline'ına hoş geldin</Text>
+          <Text style={styles.heroText}>
+            Paylaşımlar, ilanlar ve topluluk etkileşimleri tek premium akışta birleşir.
+          </Text>
+        </View>
+        <View style={styles.heroStats}>
+          <View style={styles.heroStat}>
+            <Text style={styles.heroStatValue}>{posts.length}</Text>
+            <Text style={styles.heroStatLabel}>Yayin</Text>
+          </View>
+          <View style={styles.heroStat}>
+            <Text style={styles.heroStatValue}>{users.length}</Text>
+            <Text style={styles.heroStatLabel}>Hesap</Text>
+          </View>
+          <View style={styles.heroStat}>
+            <Text style={styles.heroStatValue}>{vehicle ? '1' : '0'}</Text>
+            <Text style={styles.heroStatLabel}>Arac</Text>
+          </View>
+        </View>
+      </View>
+
       <View style={styles.composerCard}>
         <View style={styles.composerTop}>
           {profile.avatarUri ? (
@@ -63,29 +89,36 @@ export function HomeScreen({
           )}
 
           <Pressable onPress={onComposePress} style={styles.composerInput}>
-            <Text style={styles.composerPlaceholder}>Bir şeyler paylaş ya da ilan oluştur</Text>
+            <Text style={styles.composerPlaceholder}>Bir şey paylaş, soru sor ya da yeni bir ilan başlat...</Text>
+          </Pressable>
+
+          <Pressable onPress={onComposePress} style={styles.composeFab}>
+            <Feather color={theme.colors.card} name="plus" size={18} />
           </Pressable>
         </View>
 
         <View style={styles.composerActions}>
           <Pressable onPress={onComposePress} style={styles.actionChip}>
-            <Feather color={theme.colors.primary} name="image" size={15} />
+            <Feather color={theme.colors.primary} name="image" size={14} />
             <Text style={styles.actionChipText}>Medya</Text>
           </Pressable>
-          <Pressable onPress={onComposePress} style={styles.actionChip}>
-            <Feather color={theme.colors.primary} name="truck" size={15} />
-            <Text style={styles.actionChipText}>İlan</Text>
+          <Pressable onPress={onStartListingPress} style={styles.actionChip}>
+            <Feather color={theme.colors.primary} name="tag" size={14} />
+            <Text style={styles.actionChipText}>Listing</Text>
           </Pressable>
           <Pressable onPress={onVehiclePress} style={styles.actionChip}>
-            <Feather color={theme.colors.primary} name="cpu" size={15} />
-            <Text style={styles.actionChipText}>{vehicle ? 'Aracım' : 'Araç ekle'}</Text>
+            <Feather color={theme.colors.primary} name="truck" size={14} />
+            <Text style={styles.actionChipText}>{vehicle ? 'Aracim' : 'Arac ekle'}</Text>
           </Pressable>
         </View>
       </View>
 
       {users.length ? (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Hesaplar</Text>
+          <View style={styles.sectionHead}>
+            <Text style={styles.sectionTitle}>Keşfet</Text>
+            <Text style={styles.sectionHint}>Öne çıkan hesaplar</Text>
+          </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <View style={styles.userRow}>
               {users.slice(0, 8).map((user) => (
@@ -136,7 +169,7 @@ export function HomeScreen({
             </View>
             <Text style={styles.emptyTitle}>Akış henüz boş</Text>
             <Text style={styles.emptyText}>
-              İlk paylaşımı yaparak ya da ilan oluşturarak uygulamadaki sosyal akışı başlatabilirsin.
+              İlk paylaşımını yaparak ya da bir ilan oluşturarak topluluk akışına katıl.
             </Text>
             <Pressable onPress={onComposePress} style={styles.emptyButton}>
               <Text style={styles.emptyButtonText}>İlk paylaşımını yap</Text>
@@ -153,14 +186,66 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
-  composerCard: {
-    margin: theme.spacing.md,
+  hero: {
+    marginHorizontal: theme.spacing.md,
+    marginTop: theme.spacing.md,
+    marginBottom: theme.spacing.sm,
     borderRadius: 24,
     backgroundColor: theme.colors.card,
     borderWidth: 1,
     borderColor: theme.colors.border,
     padding: theme.spacing.md,
     gap: theme.spacing.md,
+    ...theme.shadow,
+  },
+  heroCopy: {
+    gap: 6,
+  },
+  heroEyebrow: {
+    color: theme.colors.primary,
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 1.2,
+  },
+  heroTitle: {
+    color: theme.colors.text,
+    fontSize: 22,
+    fontWeight: '800',
+  },
+  heroText: {
+    color: theme.colors.textSoft,
+    lineHeight: 19,
+  },
+  heroStats: {
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+  },
+  heroStat: {
+    flex: 1,
+    borderRadius: 18,
+    backgroundColor: theme.colors.surfaceMuted,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: 12,
+    gap: 2,
+  },
+  heroStatValue: {
+    color: theme.colors.text,
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  heroStatLabel: {
+    color: theme.colors.textSoft,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  composerCard: {
+    marginHorizontal: theme.spacing.md,
+    borderRadius: 24,
+    backgroundColor: theme.colors.card,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    padding: theme.spacing.md,
+    gap: theme.spacing.sm,
     ...theme.shadow,
   },
   composerTop: {
@@ -196,6 +281,14 @@ const styles = StyleSheet.create({
   composerPlaceholder: {
     color: theme.colors.textSoft,
   },
+  composeFab: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.primary,
+  },
   composerActions: {
     flexDirection: 'row',
     gap: theme.spacing.sm,
@@ -217,12 +310,23 @@ const styles = StyleSheet.create({
   },
   section: {
     paddingHorizontal: theme.spacing.md,
+    paddingTop: theme.spacing.md,
+  },
+  sectionHead: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: theme.spacing.sm,
   },
   sectionTitle: {
     color: theme.colors.text,
     fontSize: 17,
     fontWeight: '800',
-    marginBottom: theme.spacing.sm,
+  },
+  sectionHint: {
+    color: theme.colors.textSoft,
+    fontSize: 12,
+    fontWeight: '700',
   },
   userRow: {
     flexDirection: 'row',
@@ -308,4 +412,3 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
 });
-
