@@ -398,6 +398,144 @@ const sqliteSchemaSql = `
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
   );
 
+  CREATE TABLE IF NOT EXISTS garage_vehicles (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    vehicle_type TEXT NOT NULL,
+    brand TEXT NOT NULL,
+    model TEXT NOT NULL,
+    generation TEXT,
+    year INTEGER,
+    trim TEXT,
+    engine TEXT,
+    fuel_type TEXT,
+    transmission TEXT,
+    drivetrain TEXT,
+    equipment_json TEXT NOT NULL DEFAULT '[]',
+    body_type TEXT,
+    market_region TEXT,
+    color TEXT,
+    plate TEXT,
+    plate_is_hidden INTEGER NOT NULL DEFAULT 1,
+    mileage_km INTEGER,
+    paint_map_json TEXT NOT NULL DEFAULT '{}',
+    show_in_profile INTEGER NOT NULL DEFAULT 1,
+    is_primary INTEGER NOT NULL DEFAULT 0,
+    obd_connection_status TEXT NOT NULL DEFAULT 'not_connected',
+    health_score INTEGER,
+    driving_score INTEGER,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  );
+
+  CREATE TABLE IF NOT EXISTS vehicle_media (
+    id TEXT PRIMARY KEY,
+    vehicle_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    url TEXT NOT NULL,
+    kind TEXT NOT NULL DEFAULT 'photo',
+    mime_type TEXT,
+    file_name TEXT,
+    file_size INTEGER,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (vehicle_id) REFERENCES garage_vehicles(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  );
+
+  CREATE TABLE IF NOT EXISTS vehicle_registrations (
+    vehicle_id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    owner_name TEXT,
+    owner_identifier TEXT,
+    registration_city TEXT,
+    registration_serial TEXT,
+    registration_number TEXT,
+    issued_at TEXT,
+    raw_json TEXT NOT NULL DEFAULT '{}',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (vehicle_id) REFERENCES garage_vehicles(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  );
+
+  CREATE TABLE IF NOT EXISTS vehicle_chassis (
+    vehicle_id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    chassis_no TEXT,
+    engine_no TEXT,
+    notes TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (vehicle_id) REFERENCES garage_vehicles(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  );
+
+  CREATE TABLE IF NOT EXISTS obd_sessions (
+    id TEXT PRIMARY KEY,
+    vehicle_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    connection_type TEXT NOT NULL,
+    adapter_name TEXT,
+    adapter_identifier TEXT,
+    protocol TEXT,
+    status TEXT NOT NULL DEFAULT 'created',
+    started_at TEXT,
+    ended_at TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (vehicle_id) REFERENCES garage_vehicles(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  );
+
+  CREATE TABLE IF NOT EXISTS obd_readings (
+    id TEXT PRIMARY KEY,
+    session_id TEXT NOT NULL,
+    vehicle_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    reading_type TEXT NOT NULL,
+    payload_json TEXT NOT NULL,
+    captured_at TEXT NOT NULL,
+    FOREIGN KEY (session_id) REFERENCES obd_sessions(id) ON DELETE CASCADE,
+    FOREIGN KEY (vehicle_id) REFERENCES garage_vehicles(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  );
+
+  CREATE TABLE IF NOT EXISTS expertise_sessions (
+    id TEXT PRIMARY KEY,
+    vehicle_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    obd_session_id TEXT,
+    status TEXT NOT NULL DEFAULT 'created',
+    drive_duration_seconds INTEGER NOT NULL DEFAULT 0,
+    started_at TEXT,
+    ended_at TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (vehicle_id) REFERENCES garage_vehicles(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (obd_session_id) REFERENCES obd_sessions(id) ON DELETE SET NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS expertise_reports (
+    id TEXT PRIMARY KEY,
+    expertise_session_id TEXT NOT NULL,
+    vehicle_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    health_score INTEGER,
+    driving_score INTEGER,
+    dtc_summary_json TEXT NOT NULL DEFAULT '[]',
+    sensor_summary_json TEXT NOT NULL DEFAULT '[]',
+    risk_summary_json TEXT NOT NULL DEFAULT '[]',
+    comparison_summary_json TEXT NOT NULL DEFAULT '[]',
+    report_json TEXT NOT NULL DEFAULT '{}',
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (expertise_session_id) REFERENCES expertise_sessions(id) ON DELETE CASCADE,
+    FOREIGN KEY (vehicle_id) REFERENCES garage_vehicles(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  );
+
   CREATE TABLE IF NOT EXISTS commercial_profiles (
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL UNIQUE,
@@ -655,6 +793,10 @@ function normalizeHandle(value) {
 
 function normalizeAccountType(value) {
   return value === 'commercial' ? 'commercial' : 'individual';
+}
+
+function normalizePrimaryChannel(value) {
+  return value === 'phone' ? 'phone' : 'email';
 }
 
 function buildCommercialRegistrationDraft(payload = {}) {
@@ -967,6 +1109,14 @@ async function migrateLegacyData() {
     : 'INTEGER NOT NULL DEFAULT 0';
   const smsTimestampType = isPostgresMode() ? 'TIMESTAMPTZ' : 'TEXT';
   const smsCreatedAtDefault = isPostgresMode() ? 'NOW()' : "(datetime('now'))";
+  const garageBooleanDefaultTrue = isPostgresMode()
+    ? 'BOOLEAN NOT NULL DEFAULT TRUE'
+    : 'INTEGER NOT NULL DEFAULT 1';
+  const garageBooleanDefaultFalse = isPostgresMode()
+    ? 'BOOLEAN NOT NULL DEFAULT FALSE'
+    : 'INTEGER NOT NULL DEFAULT 0';
+  const garageTimestampType = isPostgresMode() ? 'TIMESTAMPTZ' : 'TEXT';
+  const garageNowDefault = isPostgresMode() ? 'NOW()' : "(datetime('now'))";
 
   await db.exec(`
     CREATE TABLE IF NOT EXISTS sms_verification_codes (
@@ -982,6 +1132,131 @@ async function migrateLegacyData() {
     );
     CREATE INDEX IF NOT EXISTS idx_sms_verification_codes_user_created_at ON sms_verification_codes(user_id, created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_sms_verification_codes_phone_lookup ON sms_verification_codes(phone_lookup);
+  `);
+
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS garage_vehicles (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      vehicle_type TEXT NOT NULL,
+      brand TEXT NOT NULL,
+      model TEXT NOT NULL,
+      generation TEXT,
+      year INTEGER,
+      trim TEXT,
+      engine TEXT,
+      fuel_type TEXT,
+      transmission TEXT,
+      drivetrain TEXT,
+      equipment_json TEXT NOT NULL DEFAULT '[]',
+      body_type TEXT,
+      market_region TEXT,
+      color TEXT,
+      plate TEXT,
+      plate_is_hidden ${garageBooleanDefaultTrue},
+      mileage_km INTEGER,
+      paint_map_json TEXT NOT NULL DEFAULT '{}',
+      show_in_profile ${garageBooleanDefaultTrue},
+      is_primary ${garageBooleanDefaultFalse},
+      obd_connection_status TEXT NOT NULL DEFAULT 'not_connected',
+      health_score INTEGER,
+      driving_score INTEGER,
+      created_at ${garageTimestampType} NOT NULL DEFAULT ${garageNowDefault},
+      updated_at ${garageTimestampType} NOT NULL DEFAULT ${garageNowDefault}
+    );
+    CREATE TABLE IF NOT EXISTS vehicle_media (
+      id TEXT PRIMARY KEY,
+      vehicle_id TEXT NOT NULL REFERENCES garage_vehicles(id) ON DELETE CASCADE,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      url TEXT NOT NULL,
+      kind TEXT NOT NULL DEFAULT 'photo',
+      mime_type TEXT,
+      file_name TEXT,
+      file_size INTEGER,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at ${garageTimestampType} NOT NULL DEFAULT ${garageNowDefault}
+    );
+    CREATE TABLE IF NOT EXISTS vehicle_registrations (
+      vehicle_id TEXT PRIMARY KEY REFERENCES garage_vehicles(id) ON DELETE CASCADE,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      owner_name TEXT,
+      owner_identifier TEXT,
+      registration_city TEXT,
+      registration_serial TEXT,
+      registration_number TEXT,
+      issued_at ${garageTimestampType},
+      raw_json TEXT NOT NULL DEFAULT '{}',
+      created_at ${garageTimestampType} NOT NULL DEFAULT ${garageNowDefault},
+      updated_at ${garageTimestampType} NOT NULL DEFAULT ${garageNowDefault}
+    );
+    CREATE TABLE IF NOT EXISTS vehicle_chassis (
+      vehicle_id TEXT PRIMARY KEY REFERENCES garage_vehicles(id) ON DELETE CASCADE,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      chassis_no TEXT,
+      engine_no TEXT,
+      notes TEXT,
+      created_at ${garageTimestampType} NOT NULL DEFAULT ${garageNowDefault},
+      updated_at ${garageTimestampType} NOT NULL DEFAULT ${garageNowDefault}
+    );
+    CREATE TABLE IF NOT EXISTS obd_sessions (
+      id TEXT PRIMARY KEY,
+      vehicle_id TEXT NOT NULL REFERENCES garage_vehicles(id) ON DELETE CASCADE,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      connection_type TEXT NOT NULL,
+      adapter_name TEXT,
+      adapter_identifier TEXT,
+      protocol TEXT,
+      status TEXT NOT NULL DEFAULT 'created',
+      started_at ${garageTimestampType},
+      ended_at ${garageTimestampType},
+      created_at ${garageTimestampType} NOT NULL DEFAULT ${garageNowDefault},
+      updated_at ${garageTimestampType} NOT NULL DEFAULT ${garageNowDefault}
+    );
+    CREATE TABLE IF NOT EXISTS obd_readings (
+      id TEXT PRIMARY KEY,
+      session_id TEXT NOT NULL REFERENCES obd_sessions(id) ON DELETE CASCADE,
+      vehicle_id TEXT NOT NULL REFERENCES garage_vehicles(id) ON DELETE CASCADE,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      reading_type TEXT NOT NULL,
+      payload_json TEXT NOT NULL,
+      captured_at ${garageTimestampType} NOT NULL DEFAULT ${garageNowDefault}
+    );
+    CREATE TABLE IF NOT EXISTS expertise_sessions (
+      id TEXT PRIMARY KEY,
+      vehicle_id TEXT NOT NULL REFERENCES garage_vehicles(id) ON DELETE CASCADE,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      obd_session_id TEXT REFERENCES obd_sessions(id) ON DELETE SET NULL,
+      status TEXT NOT NULL DEFAULT 'created',
+      drive_duration_seconds INTEGER NOT NULL DEFAULT 0,
+      started_at ${garageTimestampType},
+      ended_at ${garageTimestampType},
+      created_at ${garageTimestampType} NOT NULL DEFAULT ${garageNowDefault},
+      updated_at ${garageTimestampType} NOT NULL DEFAULT ${garageNowDefault}
+    );
+    CREATE TABLE IF NOT EXISTS expertise_reports (
+      id TEXT PRIMARY KEY,
+      expertise_session_id TEXT NOT NULL REFERENCES expertise_sessions(id) ON DELETE CASCADE,
+      vehicle_id TEXT NOT NULL REFERENCES garage_vehicles(id) ON DELETE CASCADE,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      health_score INTEGER,
+      driving_score INTEGER,
+      dtc_summary_json TEXT NOT NULL DEFAULT '[]',
+      sensor_summary_json TEXT NOT NULL DEFAULT '[]',
+      risk_summary_json TEXT NOT NULL DEFAULT '[]',
+      comparison_summary_json TEXT NOT NULL DEFAULT '[]',
+      report_json TEXT NOT NULL DEFAULT '{}',
+      created_at ${garageTimestampType} NOT NULL DEFAULT ${garageNowDefault}
+    );
+    CREATE INDEX IF NOT EXISTS idx_garage_vehicles_user_updated_at ON garage_vehicles(user_id, updated_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_garage_vehicles_user_primary ON garage_vehicles(user_id, is_primary);
+    CREATE INDEX IF NOT EXISTS idx_vehicle_media_vehicle_sort_order ON vehicle_media(vehicle_id, sort_order, created_at);
+    CREATE INDEX IF NOT EXISTS idx_vehicle_registrations_user_id ON vehicle_registrations(user_id);
+    CREATE INDEX IF NOT EXISTS idx_vehicle_chassis_user_id ON vehicle_chassis(user_id);
+    CREATE INDEX IF NOT EXISTS idx_obd_sessions_vehicle_created_at ON obd_sessions(vehicle_id, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_obd_sessions_user_status ON obd_sessions(user_id, status);
+    CREATE INDEX IF NOT EXISTS idx_obd_readings_session_captured_at ON obd_readings(session_id, captured_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_expertise_sessions_vehicle_created_at ON expertise_sessions(vehicle_id, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_expertise_reports_vehicle_created_at ON expertise_reports(vehicle_id, created_at DESC);
   `);
 
   if (!isPostgresMode()) {
@@ -1354,6 +1629,619 @@ function parseVehicle(row) {
   return repairBrokenTurkishText(
     decryptJson(row.vehicle_json, jsonParse(row.vehicle_json, undefined)),
   );
+}
+
+function hasOwnValue(source, key) {
+  return Object.prototype.hasOwnProperty.call(source || {}, key);
+}
+
+function normalizeGarageText(value, maxLength = 240) {
+  const normalized = String(value ?? '')
+    .trim()
+    .replace(/\s+/g, ' ');
+  if (!normalized) {
+    return '';
+  }
+
+  return normalized.slice(0, maxLength);
+}
+
+function normalizeGaragePlate(value) {
+  const normalized = normalizeGarageText(value, 32);
+  if (!normalized) {
+    return '';
+  }
+
+  return normalized.toLocaleUpperCase('tr');
+}
+
+function normalizeGarageInteger(value) {
+  if (value === null || value === undefined || value === '') {
+    return null;
+  }
+
+  const numeric = Number.parseInt(String(value), 10);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
+function normalizeGarageBoolean(value, fallback = false) {
+  if (value === null || value === undefined || value === '') {
+    return fallback;
+  }
+
+  if (typeof value === 'boolean') {
+    return value;
+  }
+
+  if (typeof value === 'number') {
+    return value !== 0;
+  }
+
+  const normalized = String(value).trim().toLocaleLowerCase('tr');
+  if (['1', 'true', 'yes', 'evet', 'on'].includes(normalized)) {
+    return true;
+  }
+  if (['0', 'false', 'no', 'hayir', 'off'].includes(normalized)) {
+    return false;
+  }
+
+  return fallback;
+}
+
+function normalizeGarageArray(value, fallback = []) {
+  return Array.isArray(value) ? value : fallback;
+}
+
+function normalizeGarageObject(value, fallback = {}) {
+  return value && typeof value === 'object' && !Array.isArray(value) ? value : fallback;
+}
+
+function maskGaragePlate(plate) {
+  const normalized = normalizeGaragePlate(plate);
+  if (!normalized) {
+    return '';
+  }
+
+  const compact = normalized.replace(/\s+/g, ' ');
+  if (compact.length <= 4) {
+    return compact;
+  }
+
+  return `${compact.slice(0, 2)} ••• ${compact.slice(-2)}`;
+}
+
+function normalizeVehicleMediaKind(value) {
+  const normalized = normalizeGarageText(value, 32).toLocaleLowerCase('tr');
+  return ['photo', 'video', 'document', 'report', 'diagram'].includes(normalized)
+    ? normalized
+    : 'photo';
+}
+
+function normalizeObdConnectionStatus(value) {
+  const normalized = normalizeGarageText(value, 32).toLocaleLowerCase('tr');
+  return [
+    'not_connected',
+    'connecting',
+    'connected',
+    'collecting',
+    'completed',
+    'failed',
+  ].includes(normalized)
+    ? normalized
+    : 'not_connected';
+}
+
+function normalizeObdSessionStatus(value) {
+  const normalized = normalizeGarageText(value, 32).toLocaleLowerCase('tr');
+  return ['created', 'connected', 'collecting', 'completed', 'failed'].includes(normalized)
+    ? normalized
+    : 'created';
+}
+
+function normalizeExpertiseSessionStatus(value) {
+  const normalized = normalizeGarageText(value, 32).toLocaleLowerCase('tr');
+  return ['created', 'precheck', 'collecting', 'analyzing', 'completed', 'failed'].includes(
+    normalized,
+  )
+    ? normalized
+    : 'created';
+}
+
+function normalizeVehicleMediaInputList(value) {
+  return normalizeGarageArray(value)
+    .map((item, index) => {
+      if (typeof item === 'string') {
+        const url = normalizeGarageText(item, 2_000);
+        return url
+          ? {
+              url,
+              kind: 'photo',
+              sortOrder: index,
+            }
+          : null;
+      }
+
+      if (!item || typeof item !== 'object') {
+        return null;
+      }
+
+      const url = normalizeGarageText(item.url || item.uri || item.source, 2_000);
+      if (!url) {
+        return null;
+      }
+
+      return {
+        url,
+        kind: normalizeVehicleMediaKind(item.kind),
+        mimeType: normalizeGarageText(item.mimeType || item.type || '', 120) || null,
+        fileName: normalizeGarageText(item.fileName || item.name || '', 255) || null,
+        fileSize: normalizeGarageInteger(item.fileSize || item.size),
+        sortOrder: normalizeGarageInteger(item.sortOrder) ?? index,
+      };
+    })
+    .filter(Boolean);
+}
+
+function extractLegacyVehicleMediaList(legacyVehicle) {
+  const explicitMedia = normalizeGarageArray(legacyVehicle?.media);
+  const explicitPhotos = normalizeGarageArray(legacyVehicle?.photos || legacyVehicle?.photoUris);
+  const fallbackPhoto = normalizeGarageText(
+    legacyVehicle?.photoUri || legacyVehicle?.previewImageUri || legacyVehicle?.coverUri || '',
+    2_000,
+  );
+  const merged = [
+    ...explicitMedia,
+    ...explicitPhotos.map((url) => ({ url, kind: 'photo' })),
+    ...(fallbackPhoto ? [{ url: fallbackPhoto, kind: 'photo' }] : []),
+  ];
+
+  return normalizeVehicleMediaInputList(merged);
+}
+
+function buildGarageListingDefaults(vehicle) {
+  return repairBrokenTurkishText({
+    vehicleId: vehicle.id,
+    title: [vehicle.year, vehicle.brand, vehicle.model, vehicle.trim].filter(Boolean).join(' '),
+    brand: vehicle.brand,
+    model: vehicle.model,
+    year: vehicle.year,
+    trim: vehicle.trim,
+    engine: vehicle.engine,
+    fuelType: vehicle.fuelType,
+    transmission: vehicle.transmission,
+    drivetrain: vehicle.drivetrain,
+    bodyType: vehicle.bodyType,
+    color: vehicle.color,
+    plate: vehicle.plate,
+    mileageKm: vehicle.mileageKm,
+    location: vehicle.registration?.registrationCity || '',
+  });
+}
+
+function serializeLegacyVehicleFromGarageVehicle(vehicle) {
+  const photoUrls = vehicle.media
+    .filter((item) => item.kind === 'photo')
+    .map((item) => item.url)
+    .filter(Boolean);
+  const report = vehicle.latestExpertiseReport;
+
+  return repairBrokenTurkishText({
+    id: vehicle.id,
+    type: vehicle.vehicleType,
+    brand: vehicle.brand,
+    model: vehicle.model,
+    generation: vehicle.generation,
+    year: vehicle.year ? String(vehicle.year) : '',
+    packageName: vehicle.trim || '',
+    engineVolume: vehicle.engine || '',
+    fuelType: vehicle.fuelType || '',
+    transmission: vehicle.transmission || '',
+    drivetrain: vehicle.drivetrain || '',
+    bodyType: vehicle.bodyType || '',
+    marketRegion: vehicle.marketRegion || '',
+    color: vehicle.color || '',
+    plate: vehicle.plate || '',
+    plateNumber: vehicle.plate || '',
+    plateOrigin: vehicle.plate || '',
+    mileage: vehicle.mileageKm != null ? `${vehicle.mileageKm} km` : '',
+    mileageKm: vehicle.mileageKm ?? undefined,
+    vin: vehicle.chassis?.chassisNo || '',
+    equipment: vehicle.equipment,
+    paintMap: vehicle.paintMap,
+    healthScore: report?.healthScore ?? vehicle.healthScore ?? undefined,
+    driveScore: report?.drivingScore ?? vehicle.drivingScore ?? undefined,
+    faultCodes: Array.isArray(report?.dtcSummary) ? report.dtcSummary : [],
+    obdConnectionStatus: vehicle.obdConnectionStatus,
+    media: vehicle.media.map((item) => ({
+      uri: item.url,
+      type: item.kind,
+      fileName: item.fileName || undefined,
+      mimeType: item.mimeType || undefined,
+    })),
+    photos: photoUrls,
+    photoUris: photoUrls,
+    photoUri: photoUrls[0] || undefined,
+    previewImageUri: photoUrls[0] || undefined,
+  });
+}
+
+function mapVehicleMediaRow(row) {
+  return repairBrokenTurkishText({
+    id: row.id,
+    vehicleId: row.vehicle_id,
+    userId: row.user_id,
+    url: row.url,
+    kind: row.kind,
+    mimeType: row.mime_type || undefined,
+    fileName: row.file_name || undefined,
+    fileSize: row.file_size ?? undefined,
+    sortOrder: row.sort_order ?? 0,
+    createdAt: row.created_at,
+  });
+}
+
+function mapVehicleRegistrationRow(row) {
+  if (!row) {
+    return null;
+  }
+
+  return repairBrokenTurkishText({
+    vehicleId: row.vehicle_id,
+    userId: row.user_id,
+    ownerName: row.owner_name || '',
+    ownerIdentifier: row.owner_identifier || '',
+    registrationCity: row.registration_city || '',
+    registrationSerial: row.registration_serial || '',
+    registrationNumber: row.registration_number || '',
+    issuedAt: row.issued_at || null,
+    raw: jsonParse(row.raw_json, {}),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  });
+}
+
+function mapVehicleChassisRow(row) {
+  if (!row) {
+    return null;
+  }
+
+  return repairBrokenTurkishText({
+    vehicleId: row.vehicle_id,
+    userId: row.user_id,
+    chassisNo: row.chassis_no || '',
+    engineNo: row.engine_no || '',
+    notes: row.notes || '',
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  });
+}
+
+function mapObdSessionRow(row) {
+  if (!row) {
+    return null;
+  }
+
+  return repairBrokenTurkishText({
+    id: row.id,
+    vehicleId: row.vehicle_id,
+    userId: row.user_id,
+    connectionType: row.connection_type,
+    adapterName: row.adapter_name || '',
+    adapterIdentifier: row.adapter_identifier || '',
+    protocol: row.protocol || '',
+    status: row.status,
+    startedAt: row.started_at || null,
+    endedAt: row.ended_at || null,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  });
+}
+
+function mapExpertiseReportRow(row) {
+  if (!row) {
+    return null;
+  }
+
+  return repairBrokenTurkishText({
+    id: row.id,
+    expertiseSessionId: row.expertise_session_id,
+    vehicleId: row.vehicle_id,
+    userId: row.user_id,
+    healthScore: row.health_score ?? null,
+    drivingScore: row.driving_score ?? null,
+    dtcSummary: jsonParse(row.dtc_summary_json, []),
+    sensorSummary: jsonParse(row.sensor_summary_json, []),
+    riskSummary: jsonParse(row.risk_summary_json, []),
+    comparisonSummary: jsonParse(row.comparison_summary_json, []),
+    report: jsonParse(row.report_json, {}),
+    createdAt: row.created_at,
+  });
+}
+
+async function listGarageVehicleMedia(vehicleId) {
+  return (await db
+    .prepare('SELECT * FROM vehicle_media WHERE vehicle_id = ? ORDER BY sort_order ASC, created_at ASC')
+    .all(vehicleId)).map(mapVehicleMediaRow);
+}
+
+async function getGarageVehicleRegistration(vehicleId) {
+  return mapVehicleRegistrationRow(
+    await db.prepare('SELECT * FROM vehicle_registrations WHERE vehicle_id = ?').get(vehicleId),
+  );
+}
+
+async function getGarageVehicleChassis(vehicleId) {
+  return mapVehicleChassisRow(
+    await db.prepare('SELECT * FROM vehicle_chassis WHERE vehicle_id = ?').get(vehicleId),
+  );
+}
+
+async function getLatestObdSession(vehicleId) {
+  return mapObdSessionRow(
+    await db
+      .prepare('SELECT * FROM obd_sessions WHERE vehicle_id = ? ORDER BY created_at DESC LIMIT 1')
+      .get(vehicleId),
+  );
+}
+
+async function getLatestExpertiseReport(vehicleId) {
+  return mapExpertiseReportRow(
+    await db
+      .prepare('SELECT * FROM expertise_reports WHERE vehicle_id = ? ORDER BY created_at DESC LIMIT 1')
+      .get(vehicleId),
+  );
+}
+
+async function hydrateGarageVehicleRow(row) {
+  if (!row) {
+    return null;
+  }
+
+  const [media, registration, chassis, latestObdSession, latestExpertiseReport] = await Promise.all([
+    listGarageVehicleMedia(row.id),
+    getGarageVehicleRegistration(row.id),
+    getGarageVehicleChassis(row.id),
+    getLatestObdSession(row.id),
+    getLatestExpertiseReport(row.id),
+  ]);
+
+  const vehicle = repairBrokenTurkishText({
+    id: row.id,
+    userId: row.user_id,
+    vehicleType: row.vehicle_type,
+    brand: row.brand,
+    model: row.model,
+    generation: row.generation || '',
+    year: row.year ?? null,
+    trim: row.trim || '',
+    engine: row.engine || '',
+    fuelType: row.fuel_type || '',
+    transmission: row.transmission || '',
+    drivetrain: row.drivetrain || '',
+    bodyType: row.body_type || '',
+    marketRegion: row.market_region || '',
+    color: row.color || '',
+    plate: row.plate || '',
+    plateDisplay: row.plate_is_hidden ? maskGaragePlate(row.plate) : row.plate || '',
+    plateIsHidden: Boolean(row.plate_is_hidden),
+    mileageKm: row.mileage_km ?? null,
+    equipment: jsonParse(row.equipment_json, []),
+    paintMap: jsonParse(row.paint_map_json, {}),
+    showInProfile: Boolean(row.show_in_profile),
+    isPrimary: Boolean(row.is_primary),
+    obdConnectionStatus: row.obd_connection_status || 'not_connected',
+    healthScore: row.health_score ?? null,
+    drivingScore: row.driving_score ?? null,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    media,
+    registration,
+    chassis,
+    latestObdSession,
+    latestExpertiseReport,
+  });
+
+  vehicle.listingDefaults = buildGarageListingDefaults(vehicle);
+  vehicle.canCreateListing = Boolean(vehicle.brand && vehicle.model);
+  return vehicle;
+}
+
+async function countGarageVehiclesForUser(userId) {
+  const row = await db
+    .prepare('SELECT COUNT(*) AS count FROM garage_vehicles WHERE user_id = ?')
+    .get(userId);
+  return row?.count ?? 0;
+}
+
+async function ensureGaragePrimaryInvariant(userId, preferredVehicleId = null) {
+  const primaryRows = await db
+    .prepare(
+      'SELECT id FROM garage_vehicles WHERE user_id = ? AND is_primary = ? ORDER BY updated_at DESC, created_at DESC',
+    )
+    .all(userId, toDbBoolean(true));
+
+  if (primaryRows.length > 1) {
+    const keepId =
+      primaryRows.find((item) => item.id === preferredVehicleId)?.id || primaryRows[0].id;
+    await db
+      .prepare('UPDATE garage_vehicles SET is_primary = ? WHERE user_id = ? AND id != ?')
+      .run(toDbBoolean(false), userId, keepId);
+    return keepId;
+  }
+
+  if (primaryRows.length === 1) {
+    return primaryRows[0].id;
+  }
+
+  const fallback =
+    (preferredVehicleId &&
+      (await db
+        .prepare('SELECT id FROM garage_vehicles WHERE user_id = ? AND id = ?')
+        .get(userId, preferredVehicleId))) ||
+    (await db
+      .prepare('SELECT id FROM garage_vehicles WHERE user_id = ? ORDER BY updated_at DESC, created_at DESC LIMIT 1')
+      .get(userId));
+
+  if (!fallback?.id) {
+    return null;
+  }
+
+  await db
+    .prepare('UPDATE garage_vehicles SET is_primary = ? WHERE id = ?')
+    .run(toDbBoolean(true), fallback.id);
+  return fallback.id;
+}
+
+async function syncLegacyVehicleJsonFromGarage(userId) {
+  const primaryRow =
+    (await db
+      .prepare(
+        'SELECT * FROM garage_vehicles WHERE user_id = ? ORDER BY is_primary DESC, updated_at DESC, created_at DESC LIMIT 1',
+      )
+      .get(userId)) || null;
+
+  if (!primaryRow) {
+    await db
+      .prepare('UPDATE users SET vehicle_json = ?, updated_at = ? WHERE id = ?')
+      .run(null, nowIso(), userId);
+    return null;
+  }
+
+  const vehicle = await hydrateGarageVehicleRow(primaryRow);
+  await db
+    .prepare('UPDATE users SET vehicle_json = ?, updated_at = ? WHERE id = ?')
+    .run(encryptJson(serializeLegacyVehicleFromGarageVehicle(vehicle)), nowIso(), userId);
+  return vehicle;
+}
+
+async function ensureLegacyVehicleBackfill(userId, providedUser) {
+  const existingCount = await countGarageVehiclesForUser(userId);
+  if (existingCount > 0) {
+    return;
+  }
+
+  const user = providedUser || (await getUserById(userId));
+  if (!user) {
+    return;
+  }
+
+  const legacyVehicle = parseVehicle(user);
+  if (!legacyVehicle || typeof legacyVehicle !== 'object') {
+    return;
+  }
+
+  const vehicleType =
+    normalizeGarageText(
+      legacyVehicle.vehicleType || legacyVehicle.type || legacyVehicle.category || '',
+      120,
+    ) || 'Otomobil';
+  const brand = normalizeGarageText(legacyVehicle.brand || '', 120);
+  const model = normalizeGarageText(legacyVehicle.model || '', 120);
+  if (!brand || !model) {
+    return;
+  }
+
+  const vehicleId = randomUUID();
+  const timestamp = nowIso();
+
+  await db.prepare(
+    `INSERT INTO garage_vehicles (
+      id, user_id, vehicle_type, brand, model, generation, year, trim, engine, fuel_type,
+      transmission, drivetrain, equipment_json, body_type, market_region, color, plate,
+      plate_is_hidden, mileage_km, paint_map_json, show_in_profile, is_primary,
+      obd_connection_status, health_score, driving_score, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  ).run(
+    vehicleId,
+    userId,
+    vehicleType,
+    brand,
+    model,
+    normalizeGarageText(legacyVehicle.generation || '', 120) || null,
+    normalizeGarageInteger(legacyVehicle.year),
+    normalizeGarageText(legacyVehicle.packageName || legacyVehicle.trim || '', 120) || null,
+    normalizeGarageText(legacyVehicle.engineVolume || legacyVehicle.engine || '', 120) || null,
+    normalizeGarageText(legacyVehicle.fuelType || '', 80) || null,
+    normalizeGarageText(legacyVehicle.transmission || '', 80) || null,
+    normalizeGarageText(legacyVehicle.drivetrain || '', 80) || null,
+    jsonStringify(normalizeGarageArray(legacyVehicle.equipment, [])),
+    normalizeGarageText(legacyVehicle.bodyType || '', 120) || null,
+    normalizeGarageText(legacyVehicle.marketRegion || '', 120) || null,
+    normalizeGarageText(legacyVehicle.color || '', 120) || null,
+    normalizeGaragePlate(
+      legacyVehicle.plate || legacyVehicle.plateNumber || legacyVehicle.plateOrigin || '',
+    ) || null,
+    toDbBoolean(true),
+    normalizeGarageInteger(legacyVehicle.mileageKm ?? legacyVehicle.mileage),
+    jsonStringify(normalizeGarageObject(legacyVehicle.paintMap, {})),
+    toDbBoolean(true),
+    toDbBoolean(true),
+    normalizeObdConnectionStatus(legacyVehicle.obdConnectionStatus),
+    normalizeGarageInteger(legacyVehicle.healthScore),
+    normalizeGarageInteger(legacyVehicle.driveScore),
+    timestamp,
+    timestamp,
+  );
+
+  const legacyMedia = extractLegacyVehicleMediaList(legacyVehicle);
+  for (const [index, item] of legacyMedia.entries()) {
+    await db.prepare(
+      `INSERT INTO vehicle_media (
+        id, vehicle_id, user_id, url, kind, mime_type, file_name, file_size, sort_order, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ).run(
+      randomUUID(),
+      vehicleId,
+      userId,
+      item.url,
+      item.kind,
+      item.mimeType || null,
+      item.fileName || null,
+      item.fileSize ?? null,
+      item.sortOrder ?? index,
+      timestamp,
+    );
+  }
+}
+
+async function getGarageVehicleOwnedRow(userId, vehicleId) {
+  await ensureLegacyVehicleBackfill(userId);
+  const row = await db
+    .prepare('SELECT * FROM garage_vehicles WHERE id = ? AND user_id = ?')
+    .get(vehicleId, userId);
+
+  if (!row) {
+    const error = new Error('Arac bulunamadi.');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return row;
+}
+
+async function listGarageVehicles(userId) {
+  await ensureLegacyVehicleBackfill(userId);
+  const rows = await db
+    .prepare(
+      'SELECT * FROM garage_vehicles WHERE user_id = ? ORDER BY is_primary DESC, updated_at DESC, created_at DESC',
+    )
+    .all(userId);
+  return Promise.all(rows.map((row) => hydrateGarageVehicleRow(row)));
+}
+
+async function getGarageVehicle(userId, vehicleId) {
+  return hydrateGarageVehicleRow(await getGarageVehicleOwnedRow(userId, vehicleId));
+}
+
+async function buildGarageSnapshot(userId, providedUser) {
+  await ensureLegacyVehicleBackfill(userId, providedUser);
+  const vehicles = await listGarageVehicles(userId);
+  const primaryVehicle = vehicles.find((item) => item.isPrimary) || vehicles[0] || null;
+  return repairBrokenTurkishText({
+    vehicles,
+    totalVehicles: vehicles.length,
+    primaryVehicleId: primaryVehicle?.id || null,
+  });
 }
 
 async function countFollowers(userId) {
@@ -2058,6 +2946,7 @@ async function bootstrapSnapshot(userId, sessionToken) {
       followingHandles: await getFollowingHandles(userId),
     },
     vehicle: parseVehicle(user),
+    garage: await buildGarageSnapshot(userId, user),
     settings: parseSettings(user),
     posts: (await Promise.all(
       (await db.prepare('SELECT * FROM posts ORDER BY created_at DESC').all()).map((row) =>
@@ -3080,9 +3969,14 @@ async function adjustYearlyActivityCounters(
 async function registerAccount(payload, requestMeta) {
   const name = payload.name?.trim();
   const email = normalizeEmail(payload.email);
+  const phone = normalizePhone(payload.phone);
   const password = payload.password?.trim();
   const handle = normalizeHandle(payload.handle || '');
   const accountType = normalizeAccountType(payload.accountType);
+  const primaryChannel = normalizePrimaryChannel(payload.primaryChannel);
+  const signupVerificationCode = String(
+    payload.signupVerification?.code || payload.smsCode || payload.verificationCode || '',
+  ).trim();
   const commercialRegistrationDraft =
     accountType === 'commercial' ? buildCommercialRegistrationDraft(payload) : null;
   const signupConsents = assertRequiredConsentTypes(
@@ -3097,15 +3991,17 @@ async function registerAccount(payload, requestMeta) {
 
   logInfo('auth.register.requested', {
     accountType,
+    primaryChannel,
     emailMasked: maskVerificationDestination('email', email),
+    phoneMasked: maskVerificationDestination('phone', phone),
     handle,
     hasCommercialProfile: Boolean(commercialRegistrationDraft),
     consentTypes: signupConsents.map((consent) => consent.type),
     ipAddress: requestMeta?.ipAddress || null,
   });
 
-  if (!name || !email || !password) {
-    const error = new Error('Ad, e-posta ve şifre zorunludur.');
+  if (!name || !password || (!email && !phone)) {
+    const error = new Error('Ad, e-posta veya telefon ve sifre zorunludur.');
     error.statusCode = 400;
     throw error;
   }
@@ -3126,9 +4022,26 @@ async function registerAccount(payload, requestMeta) {
     validateCommercialRegistrationDraft(commercialRegistrationDraft);
   }
 
-  const existingUser = await getUserByIdentifier(email);
+  if (primaryChannel === 'email' && !email) {
+    const error = new Error('E-posta ile kayit icin gecerli bir e-posta adresi girin.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (primaryChannel === 'phone' && !phone) {
+    const error = new Error('Telefon ile kayit icin gecerli bir telefon numarasi girin.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const lookupIdentifier = primaryChannel === 'phone' ? phone : email || phone;
+  const existingUser = await getUserByIdentifier(lookupIdentifier);
   if (existingUser?.verified) {
-    const error = new Error('Bu e-posta adresi zaten kayıtlı.');
+    const error = new Error(
+      primaryChannel === 'phone'
+        ? 'Bu telefon numarasi zaten kayitli.'
+        : 'Bu e-posta adresi zaten kayitli.',
+    );
     error.statusCode = 409;
     throw error;
   }
@@ -3138,36 +4051,79 @@ async function registerAccount(payload, requestMeta) {
 
   logInfo('auth.register.validated', {
     accountType,
+    primaryChannel,
     emailMasked: maskVerificationDestination('email', email),
+    phoneMasked: maskVerificationDestination('phone', phone),
     existingUnverifiedUser: wasExistingUnverifiedUser,
   });
 
+  let phoneVerifiedDuringSignup = false;
+  if (primaryChannel === 'phone') {
+    const smsState = getSmsAvailabilityFlags();
+    if (!smsState.smsAvailable) {
+      throw createSmsServiceUnavailableError(smsState);
+    }
+    if (!signupVerificationCode) {
+      const error = new Error('Telefon ile kayit icin SMS dogrulama kodu zorunludur.');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    await consumeVerificationRequestByDestination({
+      verificationCode: signupVerificationCode,
+      channel: 'phone',
+      destination: phone,
+      purpose: 'signup',
+    });
+    phoneVerifiedDuringSignup = true;
+  }
+
+  let finalStoredEmail = email || makeInternalEmail(existingUser?.id || randomUUID());
+  let finalStoredPhone = phone || makeInternalPhone(existingUser?.id || randomUUID());
+
   if (existingUser) {
-    await requireUniqueUser(handle, email, '', existingUser.id);
+    await requireUniqueUser(
+      handle,
+      sanitizeStoredEmail(finalStoredEmail),
+      sanitizeStoredPhone(finalStoredPhone),
+      existingUser.id,
+    );
 
     await db.prepare(
       `UPDATE users
-       SET name = ?, handle = ?, bio = ?, password_hash = ?, settings_json = ?, account_type = ?, updated_at = ?
+       SET name = ?, handle = ?, bio = ?, email = ?, phone = ?, email_lookup = ?, phone_lookup = ?,
+           password_hash = ?, verified = ?, settings_json = ?, account_type = ?, updated_at = ?
        WHERE id = ?`,
     ).run(
       name,
       handle,
       payload.bio?.trim() || '',
+      encryptText(finalStoredEmail),
+      encryptText(finalStoredPhone),
+      makeLookupHash(finalStoredEmail),
+      makeLookupHash(finalStoredPhone),
       hashPassword(password),
+      phoneVerifiedDuringSignup ? toDbBoolean(true) : existingUser.verified,
       encryptJson({
         ...parseSettings(existingUser),
-        email,
+        email: sanitizeStoredEmail(finalStoredEmail),
+        phone: sanitizeStoredPhone(finalStoredPhone),
       }),
       accountType,
       nowIso(),
       existingUser.id,
     );
   } else {
-    await requireUniqueUser(handle, email, '');
+    const nextUserId = randomUUID();
+    const nextStoredEmail = email || makeInternalEmail(nextUserId);
+    const nextStoredPhone = phone || makeInternalPhone(nextUserId);
+    finalStoredEmail = nextStoredEmail;
+    finalStoredPhone = nextStoredPhone;
 
-    userId = randomUUID();
+    await requireUniqueUser(handle, sanitizeStoredEmail(nextStoredEmail), sanitizeStoredPhone(nextStoredPhone), '');
+
+    userId = nextUserId;
     const timestamp = nowIso();
-    const storedPhone = makeInternalPhone(userId);
 
     await db.prepare(
       `INSERT INTO users (
@@ -3179,16 +4135,16 @@ async function registerAccount(payload, requestMeta) {
       name,
       handle,
       payload.bio?.trim() || '',
-      encryptText(email),
-      encryptText(storedPhone),
-      makeLookupHash(email),
-      makeLookupHash(storedPhone),
+      encryptText(nextStoredEmail),
+      encryptText(nextStoredPhone),
+      makeLookupHash(nextStoredEmail),
+      makeLookupHash(nextStoredPhone),
       hashPassword(password),
-      0,
+      toDbBoolean(phoneVerifiedDuringSignup),
       encryptJson({
         ...defaultSettings,
-        email,
-        phone: '',
+        email: sanitizeStoredEmail(nextStoredEmail),
+        phone: sanitizeStoredPhone(nextStoredPhone),
       }),
       accountType,
       accountType === 'commercial' ? 'not_applied' : 'not_applied',
@@ -3201,8 +4157,10 @@ async function registerAccount(payload, requestMeta) {
 
   logInfo('auth.register.user_upserted', {
     accountType,
+    primaryChannel,
     userIdSuffix: String(userId || '').slice(-6),
     existingUnverifiedUser: wasExistingUnverifiedUser,
+    phoneVerifiedDuringSignup,
   });
 
   await storeContextualConsents(userId, signupConsents, CONSENT_REQUIREMENTS.signup, requestMeta);
@@ -3234,14 +4192,43 @@ async function registerAccount(payload, requestMeta) {
     userAgent: requestMeta?.userAgent || null,
   });
 
+  if (primaryChannel === 'phone') {
+    const token = await createSession(userId);
+    const snapshot = await bootstrapSnapshot(userId, token);
+    const phoneMessage =
+      accountType === 'commercial'
+        ? 'Hesap olusturuldu ve SMS ile dogrulandi. Ticari belge yukleme ve platform inceleme adimina gecebilirsiniz.'
+        : 'Hesabiniz olusturuldu ve SMS ile dogrulandi.';
+
+    logInfo('auth.register.response_ready', {
+      accountType,
+      primaryChannel,
+      userIdSuffix: String(userId || '').slice(-6),
+      phoneMasked: maskVerificationDestination('phone', phone),
+      verifiedInline: true,
+    });
+
+    return {
+      token,
+      snapshot,
+      email: sanitizeStoredEmail(finalStoredEmail),
+      phone: sanitizeStoredPhone(finalStoredPhone),
+      maskedDestination: maskVerificationDestination('phone', phone),
+      verificationChannel: 'phone',
+      message: phoneMessage,
+    };
+  }
+
   const verification = await issueEmailVerificationToken(email, userId, {
     deferDelivery: true,
   });
 
   logInfo('auth.register.response_ready', {
     accountType,
+    primaryChannel,
     userIdSuffix: String(userId || '').slice(-6),
     emailMasked: maskVerificationDestination('email', email),
+    phoneMasked: maskVerificationDestination('phone', phone),
     deliveryDeferred: Boolean(verification.deliveryDeferred),
     deliveryFailed: Boolean(verification.deliveryFailed),
     emailDisabled: Boolean(verification.emailDisabled),
@@ -3250,8 +4237,10 @@ async function registerAccount(payload, requestMeta) {
 
   return {
     email,
+    phone: sanitizeStoredPhone(finalStoredPhone),
     expiresAt: verification.expiresAt,
     maskedDestination: verification.maskedDestination,
+    verificationChannel: 'email',
     message:
       verification.deliveryFailed && accountType === 'commercial'
         ? 'Ticari hesap olusturuldu. E-posta gonderimi su anda kapali veya kullanilamiyor. Dogrulama e-postasini daha sonra tekrar isteyebilirsiniz.'
@@ -4304,6 +5293,511 @@ async function trackListing(userId, postId, kind) {
   await db.prepare(
     'INSERT INTO listing_events (id, post_id, user_id, kind, created_at) VALUES (?, ?, ?, ?, ?)',
   ).run(randomUUID(), postId, userId || null, kind, nowIso());
+}
+
+async function createGarageVehicle(userId, payload) {
+  const user = await getUserById(userId);
+  if (!user) {
+    const error = new Error('Kullanıcı bulunamadı.');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  await ensureLegacyVehicleBackfill(userId, user);
+
+  const vehicleType = normalizeGarageText(payload?.vehicleType, 120);
+  const brand = normalizeGarageText(payload?.brand, 120);
+  const model = normalizeGarageText(payload?.model, 120);
+  if (!vehicleType || !brand || !model) {
+    const error = new Error('Vasıta tipi, marka ve model zorunludur.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const vehicleId = randomUUID();
+  const timestamp = nowIso();
+  const shouldBePrimary =
+    normalizeGarageBoolean(payload?.isPrimary, false) ||
+    (await countGarageVehiclesForUser(userId)) === 0;
+
+  await db.prepare(
+    `INSERT INTO garage_vehicles (
+      id, user_id, vehicle_type, brand, model, generation, year, trim, engine, fuel_type,
+      transmission, drivetrain, equipment_json, body_type, market_region, color, plate,
+      plate_is_hidden, mileage_km, paint_map_json, show_in_profile, is_primary,
+      obd_connection_status, health_score, driving_score, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  ).run(
+    vehicleId,
+    userId,
+    vehicleType,
+    brand,
+    model,
+    normalizeGarageText(payload?.generation, 120) || null,
+    normalizeGarageInteger(payload?.year),
+    normalizeGarageText(payload?.trim, 120) || null,
+    normalizeGarageText(payload?.engine, 120) || null,
+    normalizeGarageText(payload?.fuelType, 80) || null,
+    normalizeGarageText(payload?.transmission, 80) || null,
+    normalizeGarageText(payload?.drivetrain, 80) || null,
+    jsonStringify(normalizeGarageArray(payload?.equipment, [])),
+    normalizeGarageText(payload?.bodyType, 120) || null,
+    normalizeGarageText(payload?.marketRegion, 120) || null,
+    normalizeGarageText(payload?.color, 120) || null,
+    normalizeGaragePlate(payload?.plate) || null,
+    toDbBoolean(normalizeGarageBoolean(payload?.plateIsHidden, true)),
+    normalizeGarageInteger(payload?.mileageKm),
+    jsonStringify(normalizeGarageObject(payload?.paintMap, {})),
+    toDbBoolean(normalizeGarageBoolean(payload?.showInProfile, true)),
+    toDbBoolean(shouldBePrimary),
+    normalizeObdConnectionStatus(payload?.obdConnectionStatus),
+    normalizeGarageInteger(payload?.healthScore),
+    normalizeGarageInteger(payload?.drivingScore),
+    timestamp,
+    timestamp,
+  );
+
+  const mediaItems = normalizeVehicleMediaInputList(payload?.media || payload?.photos);
+  for (const [index, item] of mediaItems.entries()) {
+    await db.prepare(
+      `INSERT INTO vehicle_media (
+        id, vehicle_id, user_id, url, kind, mime_type, file_name, file_size, sort_order, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ).run(
+      randomUUID(),
+      vehicleId,
+      userId,
+      item.url,
+      item.kind,
+      item.mimeType || null,
+      item.fileName || null,
+      item.fileSize ?? null,
+      item.sortOrder ?? index,
+      timestamp,
+    );
+  }
+
+  await ensureGaragePrimaryInvariant(userId, shouldBePrimary ? vehicleId : null);
+  await syncLegacyVehicleJsonFromGarage(userId);
+  return getGarageVehicle(userId, vehicleId);
+}
+
+async function updateGarageVehicle(userId, vehicleId, patch) {
+  const row = await getGarageVehicleOwnedRow(userId, vehicleId);
+  const timestamp = nowIso();
+  const nextIsPrimary = hasOwnValue(patch, 'isPrimary')
+    ? normalizeGarageBoolean(patch.isPrimary, Boolean(row.is_primary))
+    : Boolean(row.is_primary);
+  let preferredPrimaryId = nextIsPrimary ? vehicleId : null;
+  if (!nextIsPrimary) {
+    preferredPrimaryId =
+      (await db
+        .prepare(
+          'SELECT id FROM garage_vehicles WHERE user_id = ? AND id != ? ORDER BY updated_at DESC, created_at DESC LIMIT 1',
+        )
+        .get(userId, vehicleId))?.id || vehicleId;
+  }
+
+  await db.prepare(
+    `UPDATE garage_vehicles
+     SET vehicle_type = ?, brand = ?, model = ?, generation = ?, year = ?, trim = ?, engine = ?,
+         fuel_type = ?, transmission = ?, drivetrain = ?, equipment_json = ?, body_type = ?,
+         market_region = ?, color = ?, plate = ?, plate_is_hidden = ?, mileage_km = ?,
+         paint_map_json = ?, show_in_profile = ?, is_primary = ?, obd_connection_status = ?,
+         health_score = ?, driving_score = ?, updated_at = ?
+     WHERE id = ? AND user_id = ?`,
+  ).run(
+    hasOwnValue(patch, 'vehicleType')
+      ? normalizeGarageText(patch.vehicleType, 120) || row.vehicle_type
+      : row.vehicle_type,
+    hasOwnValue(patch, 'brand') ? normalizeGarageText(patch.brand, 120) || row.brand : row.brand,
+    hasOwnValue(patch, 'model') ? normalizeGarageText(patch.model, 120) || row.model : row.model,
+    hasOwnValue(patch, 'generation')
+      ? normalizeGarageText(patch.generation, 120) || null
+      : row.generation,
+    hasOwnValue(patch, 'year') ? normalizeGarageInteger(patch.year) : row.year,
+    hasOwnValue(patch, 'trim') ? normalizeGarageText(patch.trim, 120) || null : row.trim,
+    hasOwnValue(patch, 'engine') ? normalizeGarageText(patch.engine, 120) || null : row.engine,
+    hasOwnValue(patch, 'fuelType')
+      ? normalizeGarageText(patch.fuelType, 80) || null
+      : row.fuel_type,
+    hasOwnValue(patch, 'transmission')
+      ? normalizeGarageText(patch.transmission, 80) || null
+      : row.transmission,
+    hasOwnValue(patch, 'drivetrain')
+      ? normalizeGarageText(patch.drivetrain, 80) || null
+      : row.drivetrain,
+    hasOwnValue(patch, 'equipment')
+      ? jsonStringify(normalizeGarageArray(patch.equipment, []))
+      : row.equipment_json,
+    hasOwnValue(patch, 'bodyType')
+      ? normalizeGarageText(patch.bodyType, 120) || null
+      : row.body_type,
+    hasOwnValue(patch, 'marketRegion')
+      ? normalizeGarageText(patch.marketRegion, 120) || null
+      : row.market_region,
+    hasOwnValue(patch, 'color') ? normalizeGarageText(patch.color, 120) || null : row.color,
+    hasOwnValue(patch, 'plate') ? normalizeGaragePlate(patch.plate) || null : row.plate,
+    hasOwnValue(patch, 'plateIsHidden')
+      ? toDbBoolean(normalizeGarageBoolean(patch.plateIsHidden, Boolean(row.plate_is_hidden)))
+      : row.plate_is_hidden,
+    hasOwnValue(patch, 'mileageKm') ? normalizeGarageInteger(patch.mileageKm) : row.mileage_km,
+    hasOwnValue(patch, 'paintMap')
+      ? jsonStringify(normalizeGarageObject(patch.paintMap, {}))
+      : row.paint_map_json,
+    hasOwnValue(patch, 'showInProfile')
+      ? toDbBoolean(normalizeGarageBoolean(patch.showInProfile, Boolean(row.show_in_profile)))
+      : row.show_in_profile,
+    toDbBoolean(nextIsPrimary),
+    hasOwnValue(patch, 'obdConnectionStatus')
+      ? normalizeObdConnectionStatus(patch.obdConnectionStatus)
+      : row.obd_connection_status,
+    hasOwnValue(patch, 'healthScore') ? normalizeGarageInteger(patch.healthScore) : row.health_score,
+    hasOwnValue(patch, 'drivingScore')
+      ? normalizeGarageInteger(patch.drivingScore)
+      : row.driving_score,
+    timestamp,
+    vehicleId,
+    userId,
+  );
+
+  await ensureGaragePrimaryInvariant(userId, preferredPrimaryId);
+  await syncLegacyVehicleJsonFromGarage(userId);
+  return getGarageVehicle(userId, vehicleId);
+}
+
+async function deleteGarageVehicle(userId, vehicleId) {
+  await getGarageVehicleOwnedRow(userId, vehicleId);
+  const result = await db
+    .prepare('DELETE FROM garage_vehicles WHERE id = ? AND user_id = ?')
+    .run(vehicleId, userId);
+
+  if (!result?.changes) {
+    const error = new Error('Arac silinemedi.');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  await ensureGaragePrimaryInvariant(userId);
+  await syncLegacyVehicleJsonFromGarage(userId);
+  return { vehicleId, deleted: true };
+}
+
+async function addGarageVehicleMedia(userId, vehicleId, payload) {
+  await getGarageVehicleOwnedRow(userId, vehicleId);
+  const url = normalizeGarageText(payload?.url, 2_000);
+  if (!url) {
+    const error = new Error('Arac medyasi icin gecerli bir URL zorunludur.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const sortOrder =
+    normalizeGarageInteger(payload?.sortOrder) ??
+    ((await db
+      .prepare('SELECT COALESCE(MAX(sort_order), -1) + 1 AS next_order FROM vehicle_media WHERE vehicle_id = ?')
+      .get(vehicleId))?.next_order ?? 0);
+
+  const timestamp = nowIso();
+  const mediaId = randomUUID();
+  await db.prepare(
+    `INSERT INTO vehicle_media (
+      id, vehicle_id, user_id, url, kind, mime_type, file_name, file_size, sort_order, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  ).run(
+    mediaId,
+    vehicleId,
+    userId,
+    url,
+    normalizeVehicleMediaKind(payload?.kind),
+    normalizeGarageText(payload?.mimeType, 120) || null,
+    normalizeGarageText(payload?.fileName, 255) || null,
+    normalizeGarageInteger(payload?.fileSize),
+    sortOrder,
+    timestamp,
+  );
+
+  await syncLegacyVehicleJsonFromGarage(userId);
+  return mapVehicleMediaRow(
+    await db.prepare('SELECT * FROM vehicle_media WHERE id = ?').get(mediaId),
+  );
+}
+
+async function saveGarageVehicleRegistration(userId, vehicleId, payload) {
+  await getGarageVehicleOwnedRow(userId, vehicleId);
+  const timestamp = nowIso();
+  const registration = {
+    ownerName: normalizeGarageText(payload?.ownerName, 160),
+    ownerIdentifier: normalizeGarageText(payload?.ownerIdentifier, 64),
+    registrationCity: normalizeGarageText(payload?.registrationCity, 120),
+    registrationSerial: normalizeGarageText(payload?.registrationSerial, 64),
+    registrationNumber: normalizeGarageText(payload?.registrationNumber, 64),
+    issuedAt: normalizeGarageText(payload?.issuedAt, 80) || null,
+  };
+
+  await db.prepare(
+    `INSERT INTO vehicle_registrations (
+      vehicle_id, user_id, owner_name, owner_identifier, registration_city, registration_serial,
+      registration_number, issued_at, raw_json, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(vehicle_id) DO UPDATE SET
+      owner_name = excluded.owner_name,
+      owner_identifier = excluded.owner_identifier,
+      registration_city = excluded.registration_city,
+      registration_serial = excluded.registration_serial,
+      registration_number = excluded.registration_number,
+      issued_at = excluded.issued_at,
+      raw_json = excluded.raw_json,
+      updated_at = excluded.updated_at`,
+  ).run(
+    vehicleId,
+    userId,
+    registration.ownerName || null,
+    registration.ownerIdentifier || null,
+    registration.registrationCity || null,
+    registration.registrationSerial || null,
+    registration.registrationNumber || null,
+    registration.issuedAt,
+    jsonStringify(normalizeGarageObject(payload, {})),
+    timestamp,
+    timestamp,
+  );
+
+  await syncLegacyVehicleJsonFromGarage(userId);
+  return {
+    registration: await getGarageVehicleRegistration(vehicleId),
+    vehicle: await getGarageVehicle(userId, vehicleId),
+  };
+}
+
+async function saveGarageVehicleChassis(userId, vehicleId, payload) {
+  await getGarageVehicleOwnedRow(userId, vehicleId);
+  const timestamp = nowIso();
+
+  await db.prepare(
+    `INSERT INTO vehicle_chassis (
+      vehicle_id, user_id, chassis_no, engine_no, notes, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(vehicle_id) DO UPDATE SET
+      chassis_no = excluded.chassis_no,
+      engine_no = excluded.engine_no,
+      notes = excluded.notes,
+      updated_at = excluded.updated_at`,
+  ).run(
+    vehicleId,
+    userId,
+    normalizeGarageText(payload?.chassisNo, 128) || null,
+    normalizeGarageText(payload?.engineNo, 128) || null,
+    normalizeGarageText(payload?.notes, 1_500) || null,
+    timestamp,
+    timestamp,
+  );
+
+  await syncLegacyVehicleJsonFromGarage(userId);
+  return {
+    chassis: await getGarageVehicleChassis(vehicleId),
+    vehicle: await getGarageVehicle(userId, vehicleId),
+  };
+}
+
+async function createObdSession(userId, vehicleId, payload) {
+  const vehicleRow = await getGarageVehicleOwnedRow(userId, vehicleId);
+  const sessionId = randomUUID();
+  const timestamp = nowIso();
+  const status = normalizeObdSessionStatus(payload?.status);
+  const connectionType = normalizeGarageText(payload?.connectionType, 48);
+  if (!connectionType) {
+    const error = new Error('OBD baglanti tipi zorunludur.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  await db.prepare(
+    `INSERT INTO obd_sessions (
+      id, vehicle_id, user_id, connection_type, adapter_name, adapter_identifier, protocol,
+      status, started_at, ended_at, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  ).run(
+    sessionId,
+    vehicleId,
+    userId,
+    connectionType,
+    normalizeGarageText(payload?.adapterName, 160) || null,
+    normalizeGarageText(payload?.adapterIdentifier, 160) || null,
+    normalizeGarageText(payload?.protocol, 120) || null,
+    status,
+    normalizeGarageText(payload?.startedAt, 80) || timestamp,
+    normalizeGarageText(payload?.endedAt, 80) || null,
+    timestamp,
+    timestamp,
+  );
+
+  await db
+    .prepare('UPDATE garage_vehicles SET obd_connection_status = ?, updated_at = ? WHERE id = ?')
+    .run(
+      status === 'failed' ? 'not_connected' : status === 'completed' ? 'completed' : 'connected',
+      timestamp,
+      vehicleRow.id,
+    );
+
+  return mapObdSessionRow(await db.prepare('SELECT * FROM obd_sessions WHERE id = ?').get(sessionId));
+}
+
+async function appendObdReadings(userId, vehicleId, sessionId, payload) {
+  await getGarageVehicleOwnedRow(userId, vehicleId);
+  const session = await db
+    .prepare('SELECT * FROM obd_sessions WHERE id = ? AND vehicle_id = ? AND user_id = ?')
+    .get(sessionId, vehicleId, userId);
+
+  if (!session) {
+    const error = new Error('OBD oturumu bulunamadi.');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const readings = normalizeGarageArray(payload?.readings, []).filter(
+    (item) => item && typeof item === 'object',
+  );
+  if (!readings.length) {
+    const error = new Error('Kaydedilecek OBD okumasi bulunamadi.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const timestamp = nowIso();
+  for (const item of readings) {
+    await db.prepare(
+      `INSERT INTO obd_readings (
+        id, session_id, vehicle_id, user_id, reading_type, payload_json, captured_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    ).run(
+      randomUUID(),
+      sessionId,
+      vehicleId,
+      userId,
+      normalizeGarageText(item.type || item.readingType, 80) || 'live_sensor',
+      jsonStringify(normalizeGarageObject(item.payload, item)),
+      normalizeGarageText(item.capturedAt, 80) || timestamp,
+    );
+  }
+
+  await db
+    .prepare('UPDATE obd_sessions SET status = ?, updated_at = ? WHERE id = ?')
+    .run('collecting', timestamp, sessionId);
+  await db
+    .prepare('UPDATE garage_vehicles SET obd_connection_status = ?, updated_at = ? WHERE id = ?')
+    .run('connected', timestamp, vehicleId);
+
+  return {
+    session: mapObdSessionRow(await db.prepare('SELECT * FROM obd_sessions WHERE id = ?').get(sessionId)),
+    insertedCount: readings.length,
+  };
+}
+
+async function createExpertiseSession(userId, vehicleId, payload) {
+  await getGarageVehicleOwnedRow(userId, vehicleId);
+  const expertiseSessionId = randomUUID();
+  const timestamp = nowIso();
+  const hasReportPayload =
+    hasOwnValue(payload, 'report') ||
+    hasOwnValue(payload, 'healthScore') ||
+    hasOwnValue(payload, 'drivingScore') ||
+    normalizeGarageArray(payload?.dtcSummary, []).length > 0 ||
+    normalizeGarageArray(payload?.sensorSummary, []).length > 0 ||
+    normalizeGarageArray(payload?.riskSummary, []).length > 0 ||
+    normalizeGarageArray(payload?.comparisonSummary, []).length > 0;
+  const status = normalizeExpertiseSessionStatus(
+    payload?.status || (hasReportPayload ? 'completed' : 'collecting'),
+  );
+
+  await db.prepare(
+    `INSERT INTO expertise_sessions (
+      id, vehicle_id, user_id, obd_session_id, status, drive_duration_seconds, started_at, ended_at,
+      created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  ).run(
+    expertiseSessionId,
+    vehicleId,
+    userId,
+    normalizeGarageText(payload?.obdSessionId, 120) || null,
+    status,
+    normalizeGarageInteger(payload?.driveDurationSeconds) ?? 0,
+    normalizeGarageText(payload?.startedAt, 80) || timestamp,
+    status === 'completed'
+      ? normalizeGarageText(payload?.endedAt, 80) || timestamp
+      : normalizeGarageText(payload?.endedAt, 80) || null,
+    timestamp,
+    timestamp,
+  );
+
+  let report = null;
+  if (hasReportPayload) {
+    const reportId = randomUUID();
+    await db.prepare(
+      `INSERT INTO expertise_reports (
+        id, expertise_session_id, vehicle_id, user_id, health_score, driving_score,
+        dtc_summary_json, sensor_summary_json, risk_summary_json, comparison_summary_json,
+        report_json, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ).run(
+      reportId,
+      expertiseSessionId,
+      vehicleId,
+      userId,
+      normalizeGarageInteger(payload?.healthScore),
+      normalizeGarageInteger(payload?.drivingScore),
+      jsonStringify(normalizeGarageArray(payload?.dtcSummary, [])),
+      jsonStringify(normalizeGarageArray(payload?.sensorSummary, [])),
+      jsonStringify(normalizeGarageArray(payload?.riskSummary, [])),
+      jsonStringify(normalizeGarageArray(payload?.comparisonSummary, [])),
+      jsonStringify(normalizeGarageObject(payload?.report, {})),
+      timestamp,
+    );
+
+    await db
+      .prepare(
+        'UPDATE garage_vehicles SET health_score = ?, driving_score = ?, updated_at = ? WHERE id = ?',
+      )
+      .run(
+        normalizeGarageInteger(payload?.healthScore),
+        normalizeGarageInteger(payload?.drivingScore),
+        timestamp,
+        vehicleId,
+      );
+
+    report = mapExpertiseReportRow(
+      await db.prepare('SELECT * FROM expertise_reports WHERE id = ?').get(reportId),
+    );
+  }
+
+  await syncLegacyVehicleJsonFromGarage(userId);
+
+  return {
+    session: {
+      id: expertiseSessionId,
+      vehicleId,
+      userId,
+      obdSessionId: normalizeGarageText(payload?.obdSessionId, 120) || null,
+      status,
+      driveDurationSeconds: normalizeGarageInteger(payload?.driveDurationSeconds) ?? 0,
+      startedAt: normalizeGarageText(payload?.startedAt, 80) || timestamp,
+      endedAt:
+        status === 'completed'
+          ? normalizeGarageText(payload?.endedAt, 80) || timestamp
+          : normalizeGarageText(payload?.endedAt, 80) || null,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    },
+    report,
+  };
+}
+
+async function listExpertiseReports(userId, vehicleId) {
+  await getGarageVehicleOwnedRow(userId, vehicleId);
+  const rows = await db
+    .prepare('SELECT * FROM expertise_reports WHERE vehicle_id = ? ORDER BY created_at DESC')
+    .all(vehicleId);
+  return rows.map(mapExpertiseReportRow);
 }
 
 async function saveOnboarding(userId, payload) {
@@ -5699,20 +7193,27 @@ async function clearAiMessages(userId) {
 module.exports = {
   addComment,
   activatePremiumMembership,
+  addGarageVehicleMedia,
   appendAiMessage,
+  appendObdReadings,
   bootstrapSnapshot,
   clearAiMessages,
+  createExpertiseSession,
+  createGarageVehicle,
   createInsurancePayment,
   createGroupConversation,
+  createObdSession,
   createOrUpdatePost,
   deleteAiMessage,
   deleteAiMessagesAfter,
   deleteConversationMessage,
+  deleteGarageVehicle,
   deletePost,
   editConversationMessage,
   ensureDirectConversation,
   ensureListingConversation,
   getAiMessageRow,
+  getGarageVehicle,
   getPaymentSession,
   getPublicListingById,
   getPublicPostById,
@@ -5721,18 +7222,22 @@ module.exports = {
   getUserById,
   getUserFromToken,
   listAdminDeals,
+  listExpertiseReports,
+  listGarageVehicles,
   loginAccount,
   logoutAccount,
   recordInsurancePayment,
   registerAccount,
-    requestPasswordReset,
-    resetPasswordWithCode,
-    resetPasswordWithToken,
-    resendEmailVerificationCode,
-    sendSmsVerificationCode,
-    saveOnboarding,
-    sendConversationMessage,
-    sendInsurancePolicyMail,
+  requestPasswordReset,
+  resetPasswordWithCode,
+  resetPasswordWithToken,
+  resendEmailVerificationCode,
+  saveGarageVehicleChassis,
+  saveGarageVehicleRegistration,
+  saveOnboarding,
+  sendConversationMessage,
+  sendInsurancePolicyMail,
+  sendSmsVerificationCode,
   signInWithSocialIdentity,
   setInsuranceQuote,
   setListingSoldStatus,
@@ -5744,10 +7249,11 @@ module.exports = {
   toggleRepost,
   trackListing,
   initializeStore,
-    updateAiMessageContent,
-    updateProfileMedia,
-    updateSettings,
-    verifyEmailCode,
-    verifySmsCode,
-    verifyEmailToken,
-  };
+  updateAiMessageContent,
+  updateGarageVehicle,
+  updateProfileMedia,
+  updateSettings,
+  verifyEmailCode,
+  verifySmsCode,
+  verifyEmailToken,
+};

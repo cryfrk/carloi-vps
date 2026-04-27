@@ -470,6 +470,126 @@ CREATE TABLE IF NOT EXISTS payment_orders (
   paid_at TIMESTAMPTZ
 );
 
+CREATE TABLE IF NOT EXISTS garage_vehicles (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  vehicle_type TEXT NOT NULL,
+  brand TEXT NOT NULL,
+  model TEXT NOT NULL,
+  generation TEXT,
+  year INTEGER,
+  trim TEXT,
+  engine TEXT,
+  fuel_type TEXT,
+  transmission TEXT,
+  drivetrain TEXT,
+  equipment_json TEXT NOT NULL DEFAULT '[]',
+  body_type TEXT,
+  market_region TEXT,
+  color TEXT,
+  plate TEXT,
+  plate_is_hidden BOOLEAN NOT NULL DEFAULT TRUE,
+  mileage_km INTEGER,
+  paint_map_json TEXT NOT NULL DEFAULT '{}',
+  show_in_profile BOOLEAN NOT NULL DEFAULT TRUE,
+  is_primary BOOLEAN NOT NULL DEFAULT FALSE,
+  obd_connection_status TEXT NOT NULL DEFAULT 'not_connected',
+  health_score INTEGER,
+  driving_score INTEGER,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS vehicle_media (
+  id TEXT PRIMARY KEY,
+  vehicle_id TEXT NOT NULL REFERENCES garage_vehicles(id) ON DELETE CASCADE,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  url TEXT NOT NULL,
+  kind TEXT NOT NULL DEFAULT 'photo',
+  mime_type TEXT,
+  file_name TEXT,
+  file_size INTEGER,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS vehicle_registrations (
+  vehicle_id TEXT PRIMARY KEY REFERENCES garage_vehicles(id) ON DELETE CASCADE,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  owner_name TEXT,
+  owner_identifier TEXT,
+  registration_city TEXT,
+  registration_serial TEXT,
+  registration_number TEXT,
+  issued_at TIMESTAMPTZ,
+  raw_json TEXT NOT NULL DEFAULT '{}',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS vehicle_chassis (
+  vehicle_id TEXT PRIMARY KEY REFERENCES garage_vehicles(id) ON DELETE CASCADE,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  chassis_no TEXT,
+  engine_no TEXT,
+  notes TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS obd_sessions (
+  id TEXT PRIMARY KEY,
+  vehicle_id TEXT NOT NULL REFERENCES garage_vehicles(id) ON DELETE CASCADE,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  connection_type TEXT NOT NULL,
+  adapter_name TEXT,
+  adapter_identifier TEXT,
+  protocol TEXT,
+  status TEXT NOT NULL DEFAULT 'created',
+  started_at TIMESTAMPTZ,
+  ended_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS obd_readings (
+  id TEXT PRIMARY KEY,
+  session_id TEXT NOT NULL REFERENCES obd_sessions(id) ON DELETE CASCADE,
+  vehicle_id TEXT NOT NULL REFERENCES garage_vehicles(id) ON DELETE CASCADE,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  reading_type TEXT NOT NULL,
+  payload_json TEXT NOT NULL,
+  captured_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS expertise_sessions (
+  id TEXT PRIMARY KEY,
+  vehicle_id TEXT NOT NULL REFERENCES garage_vehicles(id) ON DELETE CASCADE,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  obd_session_id TEXT REFERENCES obd_sessions(id) ON DELETE SET NULL,
+  status TEXT NOT NULL DEFAULT 'created',
+  drive_duration_seconds INTEGER NOT NULL DEFAULT 0,
+  started_at TIMESTAMPTZ,
+  ended_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS expertise_reports (
+  id TEXT PRIMARY KEY,
+  expertise_session_id TEXT NOT NULL REFERENCES expertise_sessions(id) ON DELETE CASCADE,
+  vehicle_id TEXT NOT NULL REFERENCES garage_vehicles(id) ON DELETE CASCADE,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  health_score INTEGER,
+  driving_score INTEGER,
+  dtc_summary_json TEXT NOT NULL DEFAULT '[]',
+  sensor_summary_json TEXT NOT NULL DEFAULT '[]',
+  risk_summary_json TEXT NOT NULL DEFAULT '[]',
+  comparison_summary_json TEXT NOT NULL DEFAULT '[]',
+  report_json TEXT NOT NULL DEFAULT '{}',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_expires_at ON sessions(expires_at);
 CREATE INDEX IF NOT EXISTS idx_users_account_type ON users(account_type);
@@ -513,3 +633,13 @@ CREATE INDEX IF NOT EXISTS idx_user_admin_roles_role_revoked_at ON user_admin_ro
 CREATE INDEX IF NOT EXISTS idx_digital_purchases_user_id ON digital_purchases(user_id);
 CREATE INDEX IF NOT EXISTS idx_rate_limit_hits_updated_at ON rate_limit_hits(updated_at);
 CREATE INDEX IF NOT EXISTS idx_payment_orders_conversation_id ON payment_orders(conversation_id);
+CREATE INDEX IF NOT EXISTS idx_garage_vehicles_user_updated_at ON garage_vehicles(user_id, updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_garage_vehicles_user_primary ON garage_vehicles(user_id, is_primary);
+CREATE INDEX IF NOT EXISTS idx_vehicle_media_vehicle_sort_order ON vehicle_media(vehicle_id, sort_order, created_at);
+CREATE INDEX IF NOT EXISTS idx_vehicle_registrations_user_id ON vehicle_registrations(user_id);
+CREATE INDEX IF NOT EXISTS idx_vehicle_chassis_user_id ON vehicle_chassis(user_id);
+CREATE INDEX IF NOT EXISTS idx_obd_sessions_vehicle_created_at ON obd_sessions(vehicle_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_obd_sessions_user_status ON obd_sessions(user_id, status);
+CREATE INDEX IF NOT EXISTS idx_obd_readings_session_captured_at ON obd_readings(session_id, captured_at DESC);
+CREATE INDEX IF NOT EXISTS idx_expertise_sessions_vehicle_created_at ON expertise_sessions(vehicle_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_expertise_reports_vehicle_created_at ON expertise_reports(vehicle_id, created_at DESC);

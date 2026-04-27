@@ -76,27 +76,36 @@ const {
 } = require('./modules/sales/service');
 const {
   addComment,
+  addGarageVehicleMedia,
   activatePremiumMembership,
   appendAiMessage,
+  appendObdReadings,
   bootstrapSnapshot,
   clearAiMessages,
+  createExpertiseSession,
+  createGarageVehicle,
   createInsurancePayment,
   createGroupConversation,
+  createObdSession,
   createOrUpdatePost,
   deleteAiMessage,
   deleteAiMessagesAfter,
   deleteConversationMessage,
+  deleteGarageVehicle,
   deletePost,
   editConversationMessage,
   ensureDirectConversation,
   ensureListingConversation,
   getAiMessageRow,
+  getGarageVehicle,
   getPaymentSession,
   getPublicListingById,
   getPublicPostById,
   getPublicProfileByHandle,
   getUserFromToken,
   listAdminDeals,
+  listExpertiseReports,
+  listGarageVehicles,
   loginAccount,
   logoutAccount,
   recordInsurancePayment,
@@ -105,6 +114,8 @@ const {
   resetPasswordWithCode,
   resetPasswordWithToken,
   resendEmailVerificationCode,
+  saveGarageVehicleChassis,
+  saveGarageVehicleRegistration,
   saveOnboarding,
   sendSmsVerificationCode,
   sendConversationMessage,
@@ -120,6 +131,7 @@ const {
   toggleRepost,
   trackListing,
   updateAiMessageContent,
+  updateGarageVehicle,
   updateProfileMedia,
   updateSettings,
   verifyEmailCode,
@@ -683,6 +695,192 @@ app.post('/api/media/upload', requireAuth, uploadLimiter, upload.single('file'),
   });
 });
 
+app.get('/api/garage/vehicles', requireAuth, async (request, response, next) => {
+  try {
+    const vehicles = await listGarageVehicles(request.user.id);
+    response.json({
+      success: true,
+      vehicles,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post('/api/garage/vehicles', requireAuth, async (request, response, next) => {
+  try {
+    const vehicle = await createGarageVehicle(request.user.id, request.body || {});
+    response.status(201).json({
+      success: true,
+      vehicle,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get('/api/garage/vehicles/:id', requireAuth, async (request, response, next) => {
+  try {
+    const vehicle = await getGarageVehicle(request.user.id, request.params.id);
+    response.json({
+      success: true,
+      vehicle,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.patch('/api/garage/vehicles/:id', requireAuth, async (request, response, next) => {
+  try {
+    const vehicle = await updateGarageVehicle(request.user.id, request.params.id, request.body || {});
+    response.json({
+      success: true,
+      vehicle,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.delete('/api/garage/vehicles/:id', requireAuth, async (request, response, next) => {
+  try {
+    const result = await deleteGarageVehicle(request.user.id, request.params.id);
+    response.json({
+      success: true,
+      ...result,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post(
+  '/api/garage/vehicles/:id/media',
+  requireAuth,
+  uploadLimiter,
+  upload.single('file'),
+  (request, response, next) => {
+    (async () => {
+      let url = String(request.body?.url || '').trim();
+      const resolvedKind =
+        request.body?.kind ||
+        (request.file?.mimetype?.startsWith('video/') ? 'video' : 'photo');
+      if (request.file) {
+        url = await saveUploadedMedia(request.file);
+      }
+
+      if (!url) {
+        response.status(400).json({
+          success: false,
+          message: 'Yuklenecek dosya veya mevcut medya URL\'si zorunludur.',
+        });
+        return;
+      }
+
+      const media = await addGarageVehicleMedia(request.user.id, request.params.id, {
+        url,
+        kind: resolvedKind,
+        mimeType: request.body?.mimeType || request.file?.mimetype,
+        fileName: request.body?.fileName || request.file?.originalname,
+        fileSize: request.body?.fileSize || request.file?.size,
+        sortOrder: request.body?.sortOrder,
+      });
+
+      response.status(201).json({
+        success: true,
+        media,
+      });
+    })().catch((error) => {
+      next(error);
+    });
+  },
+);
+
+app.post('/api/garage/vehicles/:id/registration', requireAuth, async (request, response, next) => {
+  try {
+    const result = await saveGarageVehicleRegistration(request.user.id, request.params.id, request.body || {});
+    response.json({
+      success: true,
+      registration: result.registration,
+      vehicle: result.vehicle,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post('/api/garage/vehicles/:id/chassis', requireAuth, async (request, response, next) => {
+  try {
+    const result = await saveGarageVehicleChassis(request.user.id, request.params.id, request.body || {});
+    response.json({
+      success: true,
+      chassis: result.chassis,
+      vehicle: result.vehicle,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post('/api/garage/vehicles/:id/obd/sessions', requireAuth, async (request, response, next) => {
+  try {
+    const session = await createObdSession(request.user.id, request.params.id, request.body || {});
+    response.status(201).json({
+      success: true,
+      session,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post(
+  '/api/garage/vehicles/:id/obd/sessions/:sessionId/readings',
+  requireAuth,
+  async (request, response, next) => {
+    try {
+      const result = await appendObdReadings(
+        request.user.id,
+        request.params.id,
+        request.params.sessionId,
+        request.body || {},
+      );
+      response.status(201).json({
+        success: true,
+        ...result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+app.post('/api/garage/vehicles/:id/expertise/sessions', requireAuth, async (request, response, next) => {
+  try {
+    const result = await createExpertiseSession(request.user.id, request.params.id, request.body || {});
+    response.status(201).json({
+      success: true,
+      session: result.session,
+      report: result.report,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get('/api/garage/vehicles/:id/expertise/reports', requireAuth, async (request, response, next) => {
+  try {
+    const reports = await listExpertiseReports(request.user.id, request.params.id);
+    response.json({
+      success: true,
+      reports,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.post('/api/auth/verification/start', authLimiter, async (request, response, next) => {
   try {
     const result = await startSignupVerification(
@@ -734,7 +932,9 @@ app.post('/api/auth/register', authLimiter, async (request, response, next) => {
   try {
     logInfo('auth.register.http_requested', {
       accountType: request.body?.accountType || 'individual',
+      primaryChannel: request.body?.primaryChannel === 'phone' ? 'phone' : 'email',
       emailProvided: Boolean(String(request.body?.email || '').trim()),
+      phoneProvided: Boolean(String(request.body?.phone || '').trim()),
       handleProvided: Boolean(String(request.body?.handle || '').trim()),
       ipAddress: request.ip,
     });
@@ -744,26 +944,39 @@ app.post('/api/auth/register', authLimiter, async (request, response, next) => {
     });
       logInfo('auth.register.http_succeeded', {
         accountType: request.body?.accountType || 'individual',
+        primaryChannel: request.body?.primaryChannel === 'phone' ? 'phone' : 'email',
         email: result.email || '',
+        phone: result.phone || '',
+        verificationChannel: result.verificationChannel || 'email',
         deliveryFailed: Boolean(result.deliveryFailed),
         emailDisabled: Boolean(result.emailDisabled),
         emailNotConfigured: Boolean(result.emailNotConfigured),
+        smsDisabled: Boolean(result.smsDisabled),
+        smsNotConfigured: Boolean(result.smsNotConfigured),
         ipAddress: request.ip,
       });
       response.status(201).json({
         success: true,
         message: result.message,
+        token: result.token,
+        snapshot: result.snapshot,
         email: result.email,
+        phone: result.phone,
         expiresAt: result.expiresAt,
         maskedDestination: result.maskedDestination,
+        verificationChannel: result.verificationChannel,
         deliveryFailed: result.deliveryFailed,
         emailDisabled: result.emailDisabled,
         emailNotConfigured: result.emailNotConfigured,
+        smsDisabled: result.smsDisabled,
+        smsNotConfigured: result.smsNotConfigured,
       });
   } catch (error) {
     logError('auth.register.http_failed', {
       accountType: request.body?.accountType || 'individual',
+      primaryChannel: request.body?.primaryChannel === 'phone' ? 'phone' : 'email',
       emailProvided: Boolean(String(request.body?.email || '').trim()),
+      phoneProvided: Boolean(String(request.body?.phone || '').trim()),
       statusCode: error?.statusCode || 500,
       errorMessage: error?.message || 'unknown',
       ipAddress: request.ip,
@@ -2034,10 +2247,11 @@ app.get(
   requirePermission(ADMIN_PERMISSIONS.COMMERCIAL_READ),
   async (request, response, next) => {
     try {
+      const requestedStatus = String(request.query.status || 'pending_review').trim();
       response.json({
         success: true,
         reviews: await listPendingCommercialReviews(
-          String(request.query.status || 'pending_review').trim() || 'pending_review',
+          requestedStatus === 'all' ? null : requestedStatus || 'pending_review',
         ),
       });
     } catch (error) {
